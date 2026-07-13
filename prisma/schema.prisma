@@ -1,0 +1,213 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ActivityAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+}
+
+enum EntityType {
+  WORKSPACE
+  PROJECT
+  TASK
+  COMMENT
+  ATTACHMENT
+}
+
+model User {
+  id          Int       @id @default(autoincrement())
+  fullName    String
+  email       String    @unique
+  password    String
+  avatar      String?
+  isActive    Boolean   @default(true)
+  lastLoginAt DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  memberships  Membership[]
+  comments     Comment[]
+  activities   Activity[]
+  createdTasks Task[]       @relation("TaskCreator")
+
+  @@map("users")
+}
+
+model Workspace {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  memberships Membership[]
+  projects    Project[]
+
+  @@map("workspaces")
+}
+
+model Membership {
+  id Int @id @default(autoincrement())
+
+  role WorkspaceRole @default(MEMBER)
+
+  joinedAt DateTime @default(now())
+
+  userId      Int
+  workspaceId Int
+
+  user      User      @relation(fields: [userId], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@unique([userId, workspaceId])
+  @@map("memberships")
+}
+
+model Project {
+  id Int @id @default(autoincrement())
+
+  name        String
+  description String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  workspaceId Int
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  tasks     Task[]
+
+  @@index([workspaceId])
+  @@map("projects")
+}
+
+model Task {
+  id Int @id @default(autoincrement())
+
+  title       String
+  description String?
+
+  status   TaskStatus   @default(TODO)
+  priority TaskPriority @default(MEDIUM)
+
+  dueDate     DateTime?
+  completedAt DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  creatorId Int
+  projectId Int
+
+  creator User    @relation("TaskCreator", fields: [creatorId], references: [id])
+  project Project @relation(fields: [projectId], references: [id])
+
+  comments    Comment[]
+  attachments Attachment[]
+
+  @@index([projectId, status])
+  @@map("tasks")
+}
+
+model Comment {
+  id Int @id @default(autoincrement())
+
+  content String
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  userId Int
+  taskId Int
+
+  user User @relation(fields: [userId], references: [id])
+  task Task @relation(fields: [taskId], references: [id])
+
+  @@index([taskId])
+  @@map("comments")
+}
+
+model Attachment {
+  id Int @id @default(autoincrement())
+
+  fileName String
+  fileUrl  String
+  fileSize Int
+  mimeType String
+
+  createdAt DateTime @default(now())
+
+  taskId Int
+
+  task Task @relation(fields: [taskId], references: [id])
+
+  @@index([taskId])
+  @@map("attachments")
+}
+
+model Activity {
+  id Int @id @default(autoincrement())
+
+  action ActivityAction
+
+  entityType EntityType
+
+  entityId Int
+
+  fieldName String?
+
+  oldValue String?
+
+  newValue String?
+
+  description String?
+
+  createdAt DateTime @default(now())
+
+  userId Int
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([entityType, entityId])
+  @@map("activities")
+}
