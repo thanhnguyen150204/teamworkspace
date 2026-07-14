@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -12,10 +13,34 @@ import { AttachmentsModule } from './attachments/attachments.module';
 import { ActivityLogsModule } from './activity/activity-logs.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { CommonModule } from './common/common.module';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD} from '@nestjs/core';
 
 @Module({
-  imports: [AuthModule, UsersModule, WorkspaceModule, MembershipModule, ProjectsModule, TasksModule, CommentsModule, AttachmentsModule, ActivityLogsModule, PrismaModule, CommonModule],
+  imports: [
+    ThrottlerModule.forRoot([{
+      ttl: 60000,
+      limit: 10,
+    }]),
+    AuthModule,
+    UsersModule,
+    WorkspaceModule,
+    MembershipModule,
+    ProjectsModule,
+    TasksModule,
+    CommentsModule,
+    AttachmentsModule,
+    ActivityLogsModule,
+    PrismaModule,
+    CommonModule,
+  ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, {provide: APP_GUARD, useClass: ThrottlerGuard}],
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer
+      .apply(LoggerMiddleware)
+      .forRoutes('*path'); 
+  }
+}
