@@ -1,4 +1,5 @@
 import { ConflictException, Injectable, UnauthorizedException } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
 import { UsersService } from "src/users/users.service";
 import { RegisterDto } from "./dto/register.dto";
 import * as bcrypt from "bcrypt"
@@ -7,6 +8,7 @@ import { LoginDto } from "./dto/login.dto";
 export class AuthService{
     constructor(
         private readonly usersService: UsersService,
+        private readonly jwtService: JwtService,
     ) {}
     async register(registerDto: RegisterDto){
         const user = await this.usersService.findByEmail(registerDto.email);
@@ -33,7 +35,15 @@ export class AuthService{
             throw new UnauthorizedException("Invalid credentials");
         }
         const {password, ...result} = user;
-        return result;
+        const payload = {sub: user.id, email: user.email};
+        return {
+            access_token: this.jwtService.sign(payload),
+            user: {
+                id: user.id,
+                fullName: user.fullName,
+                email: user.email,
+            },
+        };
     }
 
 }

@@ -32,6 +32,7 @@ export class UsersService {
     return this.prisma.user.findUnique({
       where:{
         id,
+        deletedAt: null,
       },
     });
   }
@@ -39,6 +40,7 @@ export class UsersService {
     return this.prisma.user.findUnique({
       where: {
         email,
+        deletedAt: null,
       },
     });
   }
