@@ -4,8 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
-import { WorkspaceModule } from './workspaces/workspace.module';
-import { MembershipModule } from './memberships/membership.module';
+import { MembershipsModule } from './memberships/memberships.module';
 import { ProjectsModule } from './projects/projects.module';
 import { TasksModule } from './tasks/tasks.module';
 import { CommentsModule } from './comments/comments.module';
@@ -25,16 +24,15 @@ import { WorkspacesModule } from './workspaces/workspaces.module';
     }]),
     AuthModule,
     UsersModule,
-    WorkspaceModule,
-    MembershipModule,
+    WorkspacesModule,
+    MembershipsModule,
     ProjectsModule,
     TasksModule,
     CommentsModule,
     AttachmentsModule,
     ActivityLogsModule,
     PrismaModule,
-    CommonModule,
-    WorkspacesModule,
+    CommonModule,  
   ],
   controllers: [AppController],
   providers: [AppService, {provide: APP_GUARD, useClass: ThrottlerGuard}],

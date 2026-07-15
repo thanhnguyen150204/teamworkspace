@@ -22,7 +22,7 @@ export class RolesGuard implements CanActivate{
         const request = context.switchToHttp().getRequest();
         const userId = request.user.id;
 
-        const workspaceId = parseInt(request.param.id);
+        const workspaceId = parseInt(request.params.id);
         if(!workspaceId) return true;
         const userRole = await this.workspaceService.getUserRole(userId, workspaceId);
         if(!userRole || !requireRoles.includes(userRole)){
