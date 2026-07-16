@@ -34,6 +34,29 @@ export class TasksService {
       },
     });
   }
+  async getKanban(projectId: number){
+    const tasks = await this.prisma.task.findMany({
+      where:{
+        projectId,
+        deletedAt: null
+      },
+      orderBy: { createdAt: 'asc'},
+      select:{
+        id: true,
+        title: true,
+        description: true,
+        status: true,   
+        dueDate: true,
+        createdAt: true,
+      },
+    });
+    return {
+      TODO: tasks.filter(t=> t.status === 'TODO'),
+      IN_PROGRESS: tasks.filter(t => t.status === 'IN_PROGRESS'),
+      REVIEW: tasks.filter(t=> t.status === 'REVIEW'),
+      DONE: tasks.filter(t => t.status ==='DONE')
+    };
+  }
 
   async findOne(projectId: number,id: number) {
     const taskExist = await this.prisma.task.findFirst({

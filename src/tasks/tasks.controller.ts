@@ -20,7 +20,10 @@ export class TasksController {
   findAll(@Param('projectId') projectId: number) {
     return this.tasksService.findAll(projectId);
   }
-
+  @Get('kanban')
+  getKanban(@Param('projectId') projectId: number){
+    return this.tasksService.getKanban(projectId);
+  }
   @Get(':id')
   findOne(@Param('projectId') projectId: number ,@Param('id') id: number) {
     return this.tasksService.findOne(projectId,id);
