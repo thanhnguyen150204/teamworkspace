@@ -15,6 +15,8 @@ import { CommonModule } from './common/common.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD} from '@nestjs/core';
 import { WorkspacesModule } from './workspaces/workspaces.module';
+import { AttachmentsModule } from './attachments/attachments.module';
+
 
 @Module({
   imports: [

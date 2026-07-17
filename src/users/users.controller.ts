@@ -1,8 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, BadRequestException, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 
 @Controller('users')
 export class UsersController {
@@ -30,11 +33,27 @@ export class UsersController {
     return this.usersService.findOne(+id);
   }
 
+  @Patch('avatar')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('file', {
+    storage: memoryStorage(),
+    limits: { fileSize: 2 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+      if (!file.mimetype.startsWith('image/'))
+        return cb(new BadRequestException('Only image files allowed'), false);
+      cb(null, true);
+    },
+  }))
+  updateAvatar(@CurrentUser('id') userId: number, @UploadedFile() file: Express.Multer.File) {
+    return this.usersService.updateAvatar(userId, file);
+  }
+
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(+id, updateUserDto);
   }
+
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
