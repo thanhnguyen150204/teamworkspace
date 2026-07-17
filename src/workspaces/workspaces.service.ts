@@ -1,17 +1,20 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
-import { Prisma } from 'generated/prisma/browser';
+import { EntityType, Prisma } from 'generated/prisma/browser';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
+import { ActivityService } from 'src/activity/activity.service';
+import { ActivityAction } from '@prisma/client';
 @Injectable()
 export class WorkspacesService {
   constructor(private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
+    private readonly activity: ActivityService,
   ){}
 
-  create(userId: number, createWorkspaceDto: CreateWorkspaceDto) {
-    return this.prisma.workspace.create({
+  async create(userId: number, createWorkspaceDto: CreateWorkspaceDto) {
+    const workspace= await this.prisma.workspace.create({
       data:{
         ...createWorkspaceDto,
         memberships:{
@@ -22,6 +25,14 @@ export class WorkspacesService {
         }
       }
     });
+    await this.activity.log({
+      userId, 
+      action: ActivityAction.CREATE,
+      entityType: EntityType.WORKSPACE,
+      entityId: workspace.id,
+      description: `Created workspace ${workspace.name}`,
+    });
+    return workspace;
   }
 
   findAll(userId: number) {
@@ -72,20 +83,36 @@ export class WorkspacesService {
     return workspace;
   }
 
-  async update(id: number, updateWorkspaceDto: UpdateWorkspaceDto) {
-    await this.findOne(id);
-    return this.prisma.workspace.update({
+  async update(id: number, userId: number, updateWorkspaceDto: UpdateWorkspaceDto) {
+    const workspace = await this.findOne(id);
+    const updated = await this.prisma.workspace.update({
       where: {id},
       data: updateWorkspaceDto,
     });
+    await this.activity.log({
+      userId,
+      action: ActivityAction.UPDATE,
+      entityType: EntityType.WORKSPACE,
+      entityId: id,
+      description: `Updated workspace "${workspace.name}"`,
+    });
+    return updated;
   }
 
-  async remove(id: number) {
-    await this.findOne(id);
-    return this.prisma.workspace.update({
+  async remove(id: number, userId: number) {
+    const workspace = await this.findOne(id);
+    const removed = await this.prisma.workspace.update({
       where: {id},
-      data :{deletedAt: new Date()},
+      data: {deletedAt: new Date()},
     });
+    await this.activity.log({
+      userId,
+      action: ActivityAction.DELETE,
+      entityType: EntityType.WORKSPACE,
+      entityId: id,
+      description: `Deleted workspace "${workspace.name}"`,
+    });
+    return removed;
   }
   async getUserRole(userId: number, workspaceId: number){
     const membership = await this.prisma.membership.findUnique({

@@ -31,13 +31,13 @@ export class WorkspacesController {
 
   @Patch(':id')
   @Roles('OWNER', 'ADMIN')
-  update(@Param('id') id: string, @Body() updateWorkspaceDto: UpdateWorkspaceDto) {
-    return this.workspacesService.update(+id, updateWorkspaceDto);
+  update(@Param('id') id: string, @CurrentUser('id') userId: number, @Body() updateWorkspaceDto: UpdateWorkspaceDto) {
+    return this.workspacesService.update(+id, userId, updateWorkspaceDto);
   }
 
   @Delete(':id')
   @Roles('OWNER')
-  remove(@Param('id') id: string) {
-    return this.workspacesService.remove(+id);
+  remove(@Param('id') id: string, @CurrentUser('id') userId: number) {
+    return this.workspacesService.remove(+id, userId);
   }
 }
