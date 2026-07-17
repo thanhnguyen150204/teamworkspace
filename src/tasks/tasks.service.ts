@@ -2,28 +2,32 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { ActivityService } from 'src/activity/activity.service';
+import { ActivityAction, EntityType } from '@prisma/client';
 
 @Injectable()
 export class TasksService {
-  constructor(private readonly prisma: PrismaService){}
-  async createTask(projectId: number,createTaskDto: CreateTaskDto, creatorId: number) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly activity: ActivityService,
+  ){}
+  async createTask(projectId: number, createTaskDto: CreateTaskDto, creatorId: number) {
     const task = await this.prisma.task.findFirst({
-      where:{
-        projectId,
-        title:createTaskDto.title,
-        deletedAt: null
-      },
+      where: { projectId, title: createTaskDto.title, deletedAt: null },
     });
-    if(task){
-      throw new ConflictException('Task has been existed');
-    }
-    return this.prisma.task.create({
-      data:{
-        ...createTaskDto,
-        projectId,
-        creatorId
-      }
-    })
+    if (task) throw new ConflictException('Task has been existed');
+
+    const created = await this.prisma.task.create({
+      data: { ...createTaskDto, projectId, creatorId },
+    });
+    await this.activity.log({
+      userId: creatorId,
+      action: ActivityAction.CREATE,
+      entityType: EntityType.TASK,
+      entityId: created.id,
+      description: `Created task "${created.title}"`,
+    });
+    return created;
   }
 
   findAll(projectId: number) {
@@ -72,25 +76,48 @@ export class TasksService {
     return taskExist;
   }
 
-  async update(projectId: number,id: number, updateTaskDto: UpdateTaskDto) {
-    await this.findOne(projectId, id);
-    return this.prisma.task.update({
-      where:{
-        id,
-      },
+  async update(projectId: number, id: number, userId: number, updateTaskDto: UpdateTaskDto) {
+    const oldTask = await this.findOne(projectId, id);
+    const updated = await this.prisma.task.update({
+      where: { id },
       data: updateTaskDto,
     });
+    if (updateTaskDto.status && updateTaskDto.status !== oldTask.status) {
+      await this.activity.log({
+        userId,
+        action: ActivityAction.UPDATE,
+        entityType: EntityType.TASK,
+        entityId: id,
+        fieldName: 'status',
+        oldValue: oldTask.status,
+        newValue: updateTaskDto.status,
+        description: `Moved task "${oldTask.title}" from ${oldTask.status} to ${updateTaskDto.status}`,
+      });
+    } else {
+      await this.activity.log({
+        userId,
+        action: ActivityAction.UPDATE,
+        entityType: EntityType.TASK,
+        entityId: id,
+        description: `Updated task "${oldTask.title}"`,
+      });
+    }
+    return updated;
   }
 
-  async remove(projectId: number,id: number) {
-    await this.findOne(projectId, id);
-    return this.prisma.task.update({
-      where:{
-        id,
-      },
-      data:{
-        deletedAt: new Date(),
-      },
+  async remove(projectId: number, id: number, userId: number) {
+    const task = await this.findOne(projectId, id);
+    const removed = await this.prisma.task.update({
+      where: { id },
+      data: { deletedAt: new Date() },
     });
+    await this.activity.log({
+      userId,
+      action: ActivityAction.DELETE,
+      entityType: EntityType.TASK,
+      entityId: id,
+      description: `Deleted task "${task.title}"`,
+    });
+    return removed;
   }
 }

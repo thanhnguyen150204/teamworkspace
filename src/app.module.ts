@@ -9,13 +9,12 @@ import { ProjectsModule } from './projects/projects.module';
 import { TasksModule } from './tasks/tasks.module';
 import { CommentsModule } from './comments/comments.module';
 import { AttachmentsModule } from './attachments/attachments.module';
-import { ActivityLogsModule } from './activity/activity-logs.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { CommonModule } from './common/common.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD} from '@nestjs/core';
 import { WorkspacesModule } from './workspaces/workspaces.module';
-import { AttachmentsModule } from './attachments/attachments.module';
+import { ActivityModule } from './activity/activity.module';
 
 
 @Module({
@@ -32,9 +31,9 @@ import { AttachmentsModule } from './attachments/attachments.module';
     TasksModule,
     CommentsModule,
     AttachmentsModule,
-    ActivityLogsModule,
     PrismaModule,
-    CommonModule,  
+    CommonModule,
+    ActivityModule,  
   ],
   controllers: [AppController],
   providers: [AppService, {provide: APP_GUARD, useClass: ThrottlerGuard}],
