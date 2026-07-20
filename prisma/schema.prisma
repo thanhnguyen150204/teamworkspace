@@ -64,6 +64,7 @@ model User {
   comments     Comment[]
   activities   Activity[]
   createdTasks Task[]       @relation("TaskCreator")
+  refreshTokens RefreshToken[]
 
   @@map("users")
 }
@@ -211,3 +212,23 @@ model Activity {
   @@index([entityType, entityId])
   @@map("activities")
 }
+
+  model RefreshToken {
+    id        Int      @id @default(autoincrement())
+
+    token     String   @unique
+
+    userId    Int
+
+    expiresAt DateTime
+
+    revoked   Boolean  @default(false)   // blacklist flag
+
+    createdAt DateTime @default(now())
+
+    user User @relation(fields: [userId], references: [id])
+
+    @@index([token])
+    @@index([userId])
+    @@map("refresh_tokens")
+  }
