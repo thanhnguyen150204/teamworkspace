@@ -1,11 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
-import { EntityType, Prisma } from 'generated/prisma/browser';
+import { ActivityAction, EntityType, Prisma, WorkspaceRole } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
 import { ActivityService } from 'src/activity/activity.service';
-import { ActivityAction } from '@prisma/client';
 @Injectable()
 export class WorkspacesService {
   constructor(private readonly prisma: PrismaService,
@@ -20,7 +19,7 @@ export class WorkspacesService {
         memberships:{
           create:{
             userId,
-            role: "OWNER"
+            role: WorkspaceRole.OWNER
           }
         }
       }
@@ -66,8 +65,11 @@ export class WorkspacesService {
   }
 
   async findOne(id: number) {
-    const workspace = await this.prisma.workspace.findUnique({
-      where: {id, deletedAt: null},
+    const workspace = await this.prisma.workspace.findFirst({
+      where: {
+        id,
+        deletedAt: null,
+      },
       include:{
         memberships: {
           select:{

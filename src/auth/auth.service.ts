@@ -25,7 +25,11 @@ export class AuthService{
             password: hashedPassword,
         });
         const {password, ...result} = createdUser;
-        return result;
+        const tokens = await this.generateTokens(createdUser.id, createdUser.email);
+        return {
+            ...tokens,
+            user: result,
+        };
     }
 
     async login(loginDto: LoginDto){

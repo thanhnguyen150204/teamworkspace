@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -11,12 +11,19 @@ export class UsersService {
     private readonly prisma: PrismaService,
     private readonly clodinary: CloudinaryService
   ){}
-  create(createUserDto: CreateUserDto) {
-    return this.prisma.user.create({
-      data: {
-        ...createUserDto,
-      },  
-    });
+  async create(createUserDto: CreateUserDto) {
+    try {
+      return await this.prisma.user.create({
+        data: {
+          ...createUserDto,
+        },  
+      });
+    } catch (error: any) {
+      if (error.code === 'P2002') {
+        throw new ConflictException('Email already exists');
+      }
+      throw error;
+    }
   }
 
   findAll() {
@@ -31,7 +38,7 @@ export class UsersService {
   }
 
   findOne(id: number) {
-    return this.prisma.user.findUnique({
+    return this.prisma.user.findFirst({
       where:{
         id,
         deletedAt: null,
@@ -39,10 +46,9 @@ export class UsersService {
     });
   }
   findByEmail(email: string) {
-    return this.prisma.user.findUnique({
+    return this.prisma.user.findFirst({
       where: {
         email,
-        deletedAt: null,
       },
     });
   }
