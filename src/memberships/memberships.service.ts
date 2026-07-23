@@ -1,12 +1,12 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { WorkspaceRole } from 'generated/prisma/browser';
+import { WorkspaceRole } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class MembershipsService {
   constructor(private readonly prisma: PrismaService){}
   async invite(workspaceId: number, email:string , role:WorkspaceRole) {
-    const user = await this.prisma.user.findUnique({
+    const user = await this.prisma.user.findFirst({
       where: { email, deletedAt: null}
     });
     if(!user) throw new NotFoundException('User not found');
