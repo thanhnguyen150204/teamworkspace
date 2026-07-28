@@ -49,9 +49,11 @@ export class TasksService {
         id: true,
         title: true,
         description: true,
-        status: true,   
+        status: true,
+        priority: true,   
         dueDate: true,
         createdAt: true,
+        creatorId: true,
       },
     });
     return {

@@ -26,7 +26,7 @@ export class MembershipsService {
   getMembers(workspaceId: number){
     return this.prisma.membership.findMany({
       where: {workspaceId},
-      include: {user: {select: {id: true, fullName: true, email: true}}},
+      include: {user: {select: {id: true, fullName: true, email: true, avatar: true}}},
     })
   }
 
