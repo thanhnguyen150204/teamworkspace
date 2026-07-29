@@ -2,6 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CloudinaryService } from 'src/common/cloudinary/cloudinary.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 
+function decodeOriginalName(originalname: string): string {
+  try {
+    return Buffer.from(originalname, 'latin1').toString('utf8');
+  } catch {
+    return originalname;
+  }
+}
+
 @Injectable()
 export class AttachmentsService {
   constructor(private readonly prisma: PrismaService,
@@ -9,10 +17,11 @@ export class AttachmentsService {
   ){}
   async upload(taskId: number, file: Express.Multer.File) {
     const fileUrl = await this.cloudinary.uploadFile(file, 'teamwork/attachments');
+    const fileName = decodeOriginalName(file.originalname);
     return this.prisma.attachment.create({
       data:{
         taskId,
-        fileName: file.originalname,
+        fileName,
         fileUrl,
         fileSize: file.size,
         mimeType: file.mimetype,
