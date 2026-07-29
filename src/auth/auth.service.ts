@@ -45,11 +45,7 @@ export class AuthService{
         const tokens = await this.generateTokens(user.id, user.email);
         return {
             ...tokens,
-            user: {
-                id: user.id,
-                fullName: user.fullName,
-                email: user.email,
-            },
+            user: result,
         };
     }
     async generateTokens(userId: number, email: string){
