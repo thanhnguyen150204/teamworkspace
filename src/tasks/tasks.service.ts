@@ -47,6 +47,7 @@ export class TasksService {
       orderBy: { createdAt: 'asc'},
       select:{
         id: true,
+        projectId: true,
         title: true,
         description: true,
         status: true,
