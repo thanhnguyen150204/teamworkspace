@@ -15,6 +15,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD} from '@nestjs/core';
 import { WorkspacesModule } from './workspaces/workspaces.module';
 import { ActivityModule } from './activity/activity.module';
+import { GatewayModule } from './gateway/gateway.module';
 
 
 @Module({
@@ -34,6 +35,7 @@ import { ActivityModule } from './activity/activity.module';
     PrismaModule,
     CommonModule,
     ActivityModule,  
+    GatewayModule,
   ],
   controllers: [AppController],
   providers: [AppService, {provide: APP_GUARD, useClass: ThrottlerGuard}],

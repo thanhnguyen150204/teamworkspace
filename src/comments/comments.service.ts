@@ -2,18 +2,35 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { ProjectGateway } from 'src/gateway/project.gateway';
 
 @Injectable()
 export class CommentsService {
-  constructor(private readonly prisma: PrismaService){}
-  create(taskId: number, userId: number, createCommentDto: CreateCommentDto) {
-    return this.prisma.comment.create({
+  constructor(private readonly prisma: PrismaService,
+    private readonly gateway: ProjectGateway,
+  ){}
+  async create(taskId: number, userId: number, createCommentDto: CreateCommentDto) {
+    const comment =  this.prisma.comment.create({
       data:{
         ...createCommentDto,
         userId,
         taskId
-      }
-    })
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+    const task = await this.prisma.task.findUnique({ where: {id: taskId}});
+    if(task){
+      this.gateway.broacastToProject(task.projectId, 'comment_added', comment);
+    }
+    return comment;
   }
 
   findAll(taskId: number) {

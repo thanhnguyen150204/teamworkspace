@@ -4,12 +4,14 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ActivityService } from 'src/activity/activity.service';
 import { ActivityAction, EntityType } from '@prisma/client';
+import { ProjectGateway } from 'src/gateway/project.gateway';
 
 @Injectable()
 export class TasksService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly activity: ActivityService,
+    private readonly gateway: ProjectGateway,
   ){}
   async createTask(projectId: number, createTaskDto: CreateTaskDto, creatorId: number) {
     const task = await this.prisma.task.findFirst({
@@ -27,6 +29,7 @@ export class TasksService {
       entityId: created.id,
       description: `Created task "${created.title}"`,
     });
+    this.gateway.broacastToProject(projectId, 'task_created', created);
     return created;
   }
 
@@ -96,6 +99,12 @@ export class TasksService {
         newValue: updateTaskDto.status,
         description: `Moved task "${oldTask.title}" from ${oldTask.status} to ${updateTaskDto.status}`,
       });
+      this.gateway.broacastToProject(projectId, 'task_moved',{
+        taskId: id,
+        oldStatus: oldTask.status,
+        newStatus: updateTaskDto.status,
+        task: updated,
+      })
     } else {
       await this.activity.log({
         userId,
@@ -104,6 +113,7 @@ export class TasksService {
         entityId: id,
         description: `Updated task "${oldTask.title}"`,
       });
+      this.gateway.broacastToProject(projectId, 'task_updated', updated)
     }
     return updated;
   }
@@ -121,6 +131,7 @@ export class TasksService {
       entityId: id,
       description: `Deleted task "${task.title}"`,
     });
+    this.gateway.broacastToProject(projectId, 'task_deleted', {taskId : id});
     return removed;
   }
 }
