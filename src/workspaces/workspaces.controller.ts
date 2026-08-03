@@ -27,8 +27,8 @@ export class WorkspacesController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.workspacesService.findOne(+id);
+  findOne(@Param('id') id: string, @CurrentUser('id') userId: number) {
+    return this.workspacesService.findOne(+id, userId);
   }
 
   @Patch(':id')

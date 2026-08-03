@@ -2,12 +2,19 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { WorkspaceAccessService } from 'src/workspaces/workspace-access.service';
+import { ActivityAction, EntityType } from '@prisma/client';
+import { ActivityService } from 'src/activity/activity.service';
 
 @Injectable()
 export class ProjectsService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService,
+    private readonly workspaceAccess: WorkspaceAccessService,
+    private readonly activity: ActivityService,
+  ) { }
 
-  async create(workspaceId: number, createProjectDto: CreateProjectDto) {
+  async create(workspaceId: number, createProjectDto: CreateProjectDto, currentUserId: number) {
+    await this.workspaceAccess.requireMembership(currentUserId, workspaceId);
     const projectExist = await this.prisma.project.findFirst({
       where: {
         name: createProjectDto.name,
@@ -26,7 +33,8 @@ export class ProjectsService {
     });
   }
 
-  findAll(workspaceId: number) {
+  async findAll(workspaceId: number,currentUserId: number) {
+    await this.workspaceAccess.requireMembership(currentUserId, workspaceId);
     return this.prisma.project.findMany({
       where:{
         workspaceId,
@@ -35,7 +43,8 @@ export class ProjectsService {
     });
   }
 
- async findOne(workspaceId: number,id: number) {
+ async findOne(workspaceId: number,id: number, currentUserId: number) {
+  await this.workspaceAccess.requireProjectAccess(currentUserId,id );
   const project = await this.prisma.project.findFirst({
     where: { id, workspaceId, deletedAt: null }
   });
@@ -43,8 +52,8 @@ export class ProjectsService {
   return project;
   }
 
- async update( workspaceId: number ,id: number, updateProjectDto: UpdateProjectDto) {
-   await this.findOne(workspaceId,id);
+ async update( workspaceId: number ,id: number, updateProjectDto: UpdateProjectDto,currentUserId: number) {
+  await this.workspaceAccess.requireProjectAccess(currentUserId,id );
     return this.prisma.project.update({
       where:{
         id,
@@ -55,11 +64,19 @@ export class ProjectsService {
     });
   }
 
-  async remove(workspaceId: number, id: number) {
-    await this.findOne(workspaceId, id); // validate project thuộc đúng workspace
-    return this.prisma.project.update({
-      where: { id }, // chỉ dùng @id field
+  async remove(workspaceId: number, id: number, currentUserId: number) {
+    await this.findOne(workspaceId, id, currentUserId); 
+    const removed = await this.prisma.project.update({
+      where: { id }, 
       data: { deletedAt: new Date() },
     });
+    await this.activity.log({
+      userId:currentUserId,
+      action: ActivityAction.DELETE,
+      entityType: EntityType.PROJECT,
+      entityId: id,
+      description: `Deleted project "${removed.name}"`,
+    });
+    return removed;
   }
 }

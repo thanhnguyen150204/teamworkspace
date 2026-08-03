@@ -17,7 +17,7 @@ export class ActivityController {
   }
 
   @Get('workspace/:workspaceId')
-  getWorkspaceActivity(@Param('workspaceId') workspaceId: number) {
-    return this.activityService.getWorkspaceActivity(workspaceId);
+  getWorkspaceActivity(@Param('workspaceId') workspaceId: number, @CurrentUser('id') userId: number) {
+    return this.activityService.getWorkspaceActivity(workspaceId, userId);
   }
 }

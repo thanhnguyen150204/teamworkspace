@@ -2,11 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { CreateActivityDto } from './dto/create-activity.dto';
 import { UpdateActivityDto } from './dto/update-activity.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import {    ActivityAction, EntityType } from '@prisma/client';
+import {    ActivityAction, EntityType, WorkspaceRole } from '@prisma/client';
+import { WorkspaceAccessService } from 'src/workspaces/workspace-access.service';
 
 @Injectable()
 export class ActivityService {
-  constructor (private readonly prisma: PrismaService){}
+  constructor (private readonly prisma: PrismaService,
+    private readonly workspaceAccess: WorkspaceAccessService,
+  ){}
   log(data:{
     userId: number;
     action: ActivityAction;
@@ -19,7 +22,8 @@ export class ActivityService {
   }){
     return this.prisma.activity.create({ data });
   }
-  getWorkspaceActivity(workspaceId: number){
+  async getWorkspaceActivity(workspaceId: number, currentUserId: number){
+    await this.workspaceAccess.requireMembership(currentUserId, workspaceId);
     return this.prisma.activity.findMany({
       where: {
         user:{
@@ -31,7 +35,7 @@ export class ActivityService {
       take: 50,    
     });
   }
-  getUserActivity(userId: number){
+  getUserActivity(userId: number){  
     return this.prisma.activity.findMany({
       where:{ userId},
       orderBy: {createdAt: 'desc'},

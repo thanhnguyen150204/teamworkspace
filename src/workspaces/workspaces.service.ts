@@ -5,11 +5,13 @@ import { ActivityAction, EntityType, Prisma, WorkspaceRole } from '@prisma/clien
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
 import { ActivityService } from 'src/activity/activity.service';
+import { WorkspaceAccessService } from './workspace-access.service';
 @Injectable()
 export class WorkspacesService {
   constructor(private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
     private readonly activity: ActivityService,
+    private readonly workspaceAccess: WorkspaceAccessService,
   ){}
 
   async create(userId: number, createWorkspaceDto: CreateWorkspaceDto) {
@@ -64,7 +66,8 @@ export class WorkspacesService {
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, currentUserId: number) {
+    await this.workspaceAccess.requireMembership(currentUserId, id);
     const workspace = await this.prisma.workspace.findFirst({
       where: {
         id,
@@ -86,7 +89,7 @@ export class WorkspacesService {
   }
 
   async update(id: number, userId: number, updateWorkspaceDto: UpdateWorkspaceDto) {
-    const workspace = await this.findOne(id);
+    const workspace = await this.findOne(id, userId);
     const updated = await this.prisma.workspace.update({
       where: {id},
       data: updateWorkspaceDto,
@@ -102,7 +105,7 @@ export class WorkspacesService {
   }
 
   async remove(id: number, userId: number) {
-    const workspace = await this.findOne(id);
+    const workspace = await this.findOne(id,userId);
     const removed = await this.prisma.workspace.update({
       where: {id},
       data: {deletedAt: new Date()},

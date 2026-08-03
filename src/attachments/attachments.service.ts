@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CloudinaryService } from 'src/common/cloudinary/cloudinary.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { WorkspaceAccessService } from 'src/workspaces/workspace-access.service';
 
 function decodeOriginalName(originalname: string): string {
   try {
@@ -13,9 +14,11 @@ function decodeOriginalName(originalname: string): string {
 @Injectable()
 export class AttachmentsService {
   constructor(private readonly prisma: PrismaService,
-    private readonly cloudinary: CloudinaryService
+    private readonly cloudinary: CloudinaryService,
+    private readonly workspaceAccess: WorkspaceAccessService
   ){}
-  async upload(taskId: number, file: Express.Multer.File) {
+  async upload(taskId: number, file: Express.Multer.File, currentUserId: number) {
+    await this.workspaceAccess.requireTaskAccess(currentUserId, taskId);
     const fileUrl = await this.cloudinary.uploadFile(file, 'teamwork/attachments');
     const fileName = decodeOriginalName(file.originalname);
     return this.prisma.attachment.create({
@@ -29,7 +32,8 @@ export class AttachmentsService {
     });
   }
 
-  findAll(taskId: number) {
+  async findAll(taskId: number, currentUserId: number) {
+    await this.workspaceAccess.requireTaskAccess(currentUserId, taskId);
     return this.prisma.attachment.findMany({
       where:{
         taskId
@@ -37,7 +41,8 @@ export class AttachmentsService {
       orderBy: { createdAt: 'desc'},
     });
   }
-  async remove(id: number) {
+  async remove(id: number, taskId: number, currentUserId: number) {
+    await this.workspaceAccess.requireTaskAccess(currentUserId, taskId);
     const attachment = await this.prisma.attachment.findUnique({
       where: {id},
     });

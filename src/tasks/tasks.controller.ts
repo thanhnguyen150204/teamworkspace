@@ -16,16 +16,16 @@ export class TasksController {
   }
 
   @Get()
-  findAll(@Param('projectId') projectId: number) {
-    return this.tasksService.findAll(projectId);
+  findAll(@Param('projectId') projectId: number, @CurrentUser('id') userId: number) {
+    return this.tasksService.findAll(projectId, userId);
   }
   @Get('kanban')
-  getKanban(@Param('projectId') projectId: number){
-    return this.tasksService.getKanban(projectId);
+  getKanban(@Param('projectId') projectId: number, @CurrentUser('id') userId: number){
+    return this.tasksService.getKanban(projectId, userId);
   }
   @Get(':id')
-  findOne(@Param('projectId') projectId: number ,@Param('id') id: number) {
-    return this.tasksService.findOne(projectId,id);
+  findOne(@Param('id') id: number, @CurrentUser('id') userId: number) {
+    return this.tasksService.findOne(id, userId);
   }
 
   @Patch(':id')
@@ -35,7 +35,7 @@ export class TasksController {
     @CurrentUser('id') userId: number,
     @Body() updateTaskDto: UpdateTaskDto,
   ) {
-    return this.tasksService.update(projectId, id, userId, updateTaskDto);
+    return this.tasksService.update( id,userId,updateTaskDto);
   }
 
   @Delete(':id')
@@ -44,6 +44,6 @@ export class TasksController {
     @Param('id') id: number,
     @CurrentUser('id') userId: number,
   ) {
-    return this.tasksService.remove(projectId, id, userId);
+    return this.tasksService.remove(id,userId);
   }
 }

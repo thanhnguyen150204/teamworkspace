@@ -16,22 +16,22 @@ export class CommentsController {
   }
 
   @Get()
-  findAll(@Param('taskId') taskId: number) {
-    return this.commentsService.findAll(taskId);
+  findAll(@Param('taskId') taskId: number, @CurrentUser('id') userId: number) {
+    return this.commentsService.findAll(taskId, userId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: number) {
-    return this.commentsService.findOne(id);
+  findOne(@Param('id') id: number, @Param('taskId') taskId: number, @CurrentUser('id') userId: number) {
+    return this.commentsService.findOne(id,taskId, userId);
   }
 
   @Patch(':id')
-  update(@Param('id') id: number, @CurrentUser('id') userId: number, @Body() updateCommentDto: UpdateCommentDto) {
-    return this.commentsService.update(id, userId, updateCommentDto);
+  update(@Param('id') id: number, @Param('taskId') taskId: number, @CurrentUser('id') userId: number, @Body() updateCommentDto: UpdateCommentDto) {
+    return this.commentsService.update(id,taskId, userId, updateCommentDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: number, @CurrentUser('id') userId: number) {
-    return this.commentsService.remove(id, userId);
+  remove(@Param('id') id: number,@Param('taskId') taskId: number, @CurrentUser('id') userId: number) {
+    return this.commentsService.remove(id,taskId, userId);
   }
 }

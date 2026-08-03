@@ -4,14 +4,17 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ActivityService } from 'src/activity/activity.service';
 import { ActivityAction, EntityType } from '@prisma/client';
+import { WorkspaceAccessService } from 'src/workspaces/workspace-access.service';
 
 @Injectable()
 export class TasksService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly activity: ActivityService,
+    private readonly workspaceAccess: WorkspaceAccessService,
   ){}
   async createTask(projectId: number, createTaskDto: CreateTaskDto, creatorId: number) {
+    await this.workspaceAccess.requireProjectAccess(creatorId, projectId);
     const task = await this.prisma.task.findFirst({
       where: { projectId, title: createTaskDto.title, deletedAt: null },
     });
@@ -30,7 +33,8 @@ export class TasksService {
     return created;
   }
 
-  findAll(projectId: number) {
+  async findAll(projectId: number, currentUserId: number ) {
+    await this.workspaceAccess.requireProjectAccess(currentUserId, projectId);
     return this.prisma.task.findMany({
       where:{
         projectId,
@@ -38,7 +42,8 @@ export class TasksService {
       },
     });
   }
-  async getKanban(projectId: number){
+  async getKanban(projectId: number, currentUserId: number){
+    await this.workspaceAccess.requireProjectAccess(currentUserId,projectId);
     const tasks = await this.prisma.task.findMany({
       where:{
         projectId,
@@ -65,22 +70,13 @@ export class TasksService {
     };
   }
 
-  async findOne(projectId: number,id: number) {
-    const taskExist = await this.prisma.task.findFirst({
-      where:{
-        projectId,
-        id,
-        deletedAt: null
-      },
-    });
-    if(!taskExist){
-      throw new NotFoundException('Task not found');
-    }
-    return taskExist;
+  async findOne(taskId: number, currentUserId: number) {
+    const task = await this.workspaceAccess.requireTaskAccess(currentUserId, taskId);
+    return task;
   }
 
-  async update(projectId: number, id: number, userId: number, updateTaskDto: UpdateTaskDto) {
-    const oldTask = await this.findOne(projectId, id);
+  async update( id: number, userId: number, updateTaskDto: UpdateTaskDto) {
+    const oldTask = await this.workspaceAccess.requireTaskAccess(userId,id)
     const updated = await this.prisma.task.update({
       where: { id },
       data: updateTaskDto,
@@ -108,8 +104,8 @@ export class TasksService {
     return updated;
   }
 
-  async remove(projectId: number, id: number, userId: number) {
-    const task = await this.findOne(projectId, id);
+  async remove( id: number, userId: number) {
+    const task = await this.workspaceAccess.requireTaskAccess(userId,id);
     const removed = await this.prisma.task.update({
       where: { id },
       data: { deletedAt: new Date() },
