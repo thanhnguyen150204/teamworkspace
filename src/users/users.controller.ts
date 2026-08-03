@@ -20,8 +20,7 @@ export class UsersController {
   async getProfile(@Request() req) {
     const user = await this.usersService.findOne(req.user.id);
     if (!user) return null;
-    const { password, ...result } = user;
-    return result;
+    return user;
   }
   
   @Get(':id')

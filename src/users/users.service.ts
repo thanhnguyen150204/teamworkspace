@@ -3,6 +3,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CloudinaryService } from 'src/common/cloudinary/cloudinary.service';
+import { publicUserSelect } from './dto/user-select.dto';
 
 
 @Injectable()
@@ -17,6 +18,7 @@ export class UsersService {
     where:{
         deletedAt:null,
     },
+    select: publicUserSelect,
     orderBy:{
         createdAt:'desc'
     }
@@ -29,6 +31,7 @@ export class UsersService {
         id,
         deletedAt: null,
       },
+      select: publicUserSelect,
     });
   }
   findByEmail(email: string) {
@@ -48,6 +51,7 @@ export class UsersService {
         id:id,
       },
       data: updateUserDto,
+      select: publicUserSelect,
     });
   }
   async updateAvatar(userId: number, file: Express.Multer.File){
@@ -55,6 +59,7 @@ export class UsersService {
     return this.prisma.user.update({
       where:{ id: userId},
       data: {avatar: avatarUrl},
+      select: publicUserSelect,
     });
   }
   async remove(id: number) {
@@ -69,7 +74,8 @@ export class UsersService {
       data:{
         deletedAt:new Date(),
         isActive:false
-      } 
+      },
+      select: publicUserSelect,
     });
   }
 }
