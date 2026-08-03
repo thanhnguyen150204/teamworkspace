@@ -3,39 +3,44 @@ import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
+import { WorkspaceMembershipGuard } from 'src/auth/guards/workspace-membership.guard';
+import { WorkspaceRole } from '@prisma/client';
+import { WorkspaceRolesGuard } from 'src/auth/guards/WorkspaceRolesGuard';
 
 @Controller('workspaces/:workspaceId/projects')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, WorkspaceMembershipGuard)
 export class ProjectsController {
-  constructor(private readonly projectsService: ProjectsService) {}
+  constructor(private readonly projectsService: ProjectsService) { }
 
   @Post()
-  @Roles('OWNER','ADMIN')
-  createProject(@Param('workspaceId') workspaceId : number, @Body() createProjectDto: CreateProjectDto) {
-    return this.projectsService.create(workspaceId,createProjectDto);
+  @UseGuards(WorkspaceRolesGuard)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
+  createProject(@Param('workspaceId') workspaceId: number, @Body() createProjectDto: CreateProjectDto) {
+    return this.projectsService.create(workspaceId, createProjectDto);
   }
 
   @Get()
-  findAll(@Param('workspaceId') workspaceId : number) {
+  findAll(@Param('workspaceId') workspaceId: number) {
     return this.projectsService.findAll(workspaceId);
   }
 
   @Get(':id')
-  findOne(@Param('workspaceId') workspaceId : number, @Param('id') id: number) {
-    return this.projectsService.findOne(workspaceId,id);
+  findOne(@Param('workspaceId') workspaceId: number, @Param('id') id: number) {
+    return this.projectsService.findOne(workspaceId, id);
   }
 
   @Patch(':id')
-  @Roles('OWNER','ADMIN') 
-  update(@Param('workspaceId') workspaceId: number ,@Param('id') id: number, @Body() updateProjectDto: UpdateProjectDto) {
-    return this.projectsService.update(workspaceId,id, updateProjectDto);
+  @UseGuards(WorkspaceRolesGuard)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
+  update(@Param('workspaceId') workspaceId: number, @Param('id') id: number, @Body() updateProjectDto: UpdateProjectDto) {
+    return this.projectsService.update(workspaceId, id, updateProjectDto);
   }
 
   @Delete(':id')
-  @Roles('OWNER','ADMIN')
-  remove(@Param('workspaceId') workspaceId: number ,@Param('id') id: number) {
-    return this.projectsService.remove(workspaceId,id);
+  @UseGuards(WorkspaceRolesGuard)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
+  remove(@Param('workspaceId') workspaceId: number, @Param('id') id: number) {
+    return this.projectsService.remove(workspaceId, id);
   }
 }
