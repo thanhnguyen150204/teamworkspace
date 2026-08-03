@@ -10,12 +10,6 @@ import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
-
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
-  }
-
   @Get()
   @UseGuards(JwtAuthGuard)
   findAll() {

@@ -11,20 +11,6 @@ export class UsersService {
     private readonly prisma: PrismaService,
     private readonly clodinary: CloudinaryService
   ){}
-  async create(createUserDto: CreateUserDto) {
-    try {
-      return await this.prisma.user.create({
-        data: {
-          ...createUserDto,
-        },  
-      });
-    } catch (error: any) {
-      if (error.code === 'P2002') {
-        throw new ConflictException('Email already exists');
-      }
-      throw error;
-    }
-  }
 
   findAll() {
     return this.prisma.user.findMany({

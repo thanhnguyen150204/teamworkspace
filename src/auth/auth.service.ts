@@ -19,10 +19,12 @@ export class AuthService{
             throw new ConflictException("User already exists");
         }
         const hashedPassword = await bcrypt.hash(registerDto.password, 10);
-        const createdUser = await this.usersService.create({
-            fullName: registerDto.fullName,
-            email: registerDto.email,
-            password: hashedPassword,
+        const createdUser = await this.prisma.user.create({
+            data:{
+                fullName: registerDto.fullName,
+                email: registerDto.email,
+                password: hashedPassword,
+            }
         });
         const {password, ...result} = createdUser;
         const tokens = await this.generateTokens(createdUser.id, createdUser.email);

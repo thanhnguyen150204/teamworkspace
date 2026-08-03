@@ -5,9 +5,10 @@ import { WorkspacesModule } from 'src/workspaces/workspaces.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { WorkspaceRolesGuard } from 'src/auth/guards/WorkspaceRolesGuard';
 import { WorkspaceMembershipGuard } from 'src/auth/guards/workspace-membership.guard';
+import { ActivityModule } from 'src/activity/activity.module';
 
 @Module({
-  imports: [WorkspacesModule, PrismaModule],
+  imports: [WorkspacesModule, PrismaModule, ActivityModule],
   controllers: [ProjectsController],
   providers: [ProjectsService, WorkspaceRolesGuard, WorkspaceMembershipGuard],
 })
