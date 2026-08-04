@@ -1,26 +1,26 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, BadRequestException, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { ChangePasswordDto } from './dto/change-password';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
   @Get()
   @UseGuards(JwtAuthGuard)
   findAll() {
     return this.usersService.findAll();
   }
+
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  async getProfile(@Request() req) {
-    const user = await this.usersService.findOne(req.user.id);
-    if (!user) return null;
-    return user;
+  getProfile(@CurrentUser('id') userId: number) {
+    return this.usersService.findOne(userId);
   }
   
   @Get(':id')
@@ -29,7 +29,7 @@ export class UsersController {
     return this.usersService.findOne(+id);
   }
 
-  @Patch('avatar')
+  @Patch('me/avatar')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file', {
     storage: memoryStorage(),
@@ -44,16 +44,21 @@ export class UsersController {
     return this.usersService.updateAvatar(userId, file);
   }
 
-  @Patch(':id')
+  @Patch('me')
   @UseGuards(JwtAuthGuard)
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  updateProfile(@CurrentUser('id') userId: number, @Body() updateUserDto: UpdateProfileDto) {
+    return this.usersService.updateProfile(userId, updateUserDto);
   }
 
-
-  @Delete(':id')
+  @Patch('me/password')
   @UseGuards(JwtAuthGuard)
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  changePassword(@CurrentUser('id') userId: number, @Body() changePasswordDto: ChangePasswordDto) {
+    return this.usersService.changePassword(userId, changePasswordDto);
+  }
+
+  @Delete('me')
+  @UseGuards(JwtAuthGuard)
+  remove(@CurrentUser('id') userId: number) {
+    return this.usersService.remove(userId);
   }
 }
