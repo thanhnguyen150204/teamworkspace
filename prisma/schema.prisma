@@ -216,7 +216,10 @@ model Activity {
   model RefreshToken {
     id        Int      @id @default(autoincrement())
 
-    token     String   @unique
+    jti       String   @unique
+
+    
+    tokenHash     String   @unique
 
     userId    Int
 
@@ -224,11 +227,13 @@ model Activity {
 
     revoked   Boolean  @default(false)   // blacklist flag
 
+    replaceByToken String? 
+
     createdAt DateTime @default(now())
 
     user User @relation(fields: [userId], references: [id])
 
-    @@index([token])
+    @@index([tokenHash])
     @@index([userId])
     @@map("refresh_tokens")
   }
