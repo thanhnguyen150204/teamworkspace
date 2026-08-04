@@ -14,7 +14,7 @@ export class AuthService{
         private readonly prisma: PrismaService,
     ) {}
     async register(registerDto: RegisterDto){
-        const user = await this.usersService.findByEmail(registerDto.email);
+        const user = await this.usersService.findRawByEmail(registerDto.email);
         if(user){
             throw new ConflictException("User already exists");
         }
@@ -88,6 +88,14 @@ export class AuthService{
         }
         if(tokenRecord.expiresAt < new Date()){
             throw new UnauthorizedException('Refresh token expired');
+        }
+        const user = await this.usersService.findOne(payload.sub);
+        if(!user || user.isActive === false) {
+            await this.prisma.refreshToken.updateMany({
+                where: { userId: payload.sub, revoked: false},
+                data: {revoked: true},
+            });
+            throw new UnauthorizedException('User account is inactive or has been deleted');
         }
         const access_token = this.jwtService.sign({
             sub: payload.sub,

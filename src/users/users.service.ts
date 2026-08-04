@@ -39,6 +39,16 @@ export class UsersService {
     return this.prisma.user.findFirst({
       where: {
         email,
+        deletedAt: null,
+        isActive: true,
+
+      },
+    });
+  }
+  findRawByEmail(email: string){
+    return this.prisma.user.findFirst({
+      where:{
+        email,
       },
     });
   }
