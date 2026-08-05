@@ -10,46 +10,79 @@ function decodeOriginalName(originalname: string): string {
     return originalname;
   }
 }
-
+function sanitizeFileName(name: string): string {
+  const decoded = decodeOriginalName(name);
+  return (
+    decoded
+      .replace(/\0/g, '') // delete null byte
+      .replace(/[\/\\]/g, '_') // replace path / and \\
+      .replace(/\.\.+/g, '.') // block path traversal (..)
+      .trim() || 'unnamed_attachment'
+  );
+}
 @Injectable()
 export class AttachmentsService {
   constructor(private readonly prisma: PrismaService,
     private readonly cloudinary: CloudinaryService,
     private readonly workspaceAccess: WorkspaceAccessService
-  ){}
+  ) { }
+  private extractPublicId(fileUrl: string): string | null {
+    try {
+      return fileUrl
+        .split('/upload/')[1]
+        .replace(/^v\d+\//, '')
+        .replace(/\.[^/.]+$/, '');
+    } catch {
+      return null;
+    }
+  }
   async upload(taskId: number, file: Express.Multer.File, currentUserId: number) {
     await this.workspaceAccess.requireTaskAccess(currentUserId, taskId);
     const fileUrl = await this.cloudinary.uploadFile(file, 'teamwork/attachments');
-    const fileName = decodeOriginalName(file.originalname);
-    return this.prisma.attachment.create({
-      data:{
-        taskId,
-        fileName,
-        fileUrl,
-        fileSize: file.size,
-        mimeType: file.mimetype,
+    const fileName = sanitizeFileName(file.originalname);
+    try {
+      return await this.prisma.attachment.create({
+        data: {
+          taskId,
+          fileName,
+          fileUrl,
+          fileSize: file.size,
+          mimeType: file.mimetype,
+        }
+      });
+    } catch (error) {
+      const publicId = this.extractPublicId(fileUrl);
+      if (publicId) {
+        await this.cloudinary.deleteFile(publicId).catch(() => { });
       }
-    });
+      throw error;
+    }
   }
 
   async findAll(taskId: number, currentUserId: number) {
     await this.workspaceAccess.requireTaskAccess(currentUserId, taskId);
     return this.prisma.attachment.findMany({
-      where:{
+      where: {
         taskId
       },
-      orderBy: { createdAt: 'desc'},
+      orderBy: { createdAt: 'desc' },
     });
   }
+
   async remove(id: number, taskId: number, currentUserId: number) {
     await this.workspaceAccess.requireTaskAccess(currentUserId, taskId);
     const attachment = await this.prisma.attachment.findUnique({
-      where: {id},
+      where: { id },
     });
-    if(!attachment) throw new NotFoundException('Attachment not found');
-    
-    const publicId = attachment.fileUrl.split('/upload/')[1].replace(/^v\d+\//, '').replace(/\.[^/.]+$/, '');
-    await this.cloudinary.deleteFile(publicId);
-    return this.prisma.attachment.delete({ where: {id}});
+    if (!attachment) throw new NotFoundException('Attachment not found');
+    if (attachment.taskId !== taskId){
+      throw new NotFoundException('Attachment not found in this task');
+    }
+
+    const publicId = this.extractPublicId(attachment.fileUrl);
+    if (publicId) {
+      await this.cloudinary.deleteFile(publicId).catch(() => { });
+    }
+    return this.prisma.attachment.delete({ where: { id } });
   }
 }
