@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable } from "@nestjs/common";
-import { Membership, Project, Task } from "@prisma/client";
+import { Membership, Project, Task, Workspace } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 
 @Injectable()
@@ -20,7 +20,7 @@ export class WorkspaceAccessService {
         }
         return membership;
     }
-    async requireProjectAccess(userId: number, projectId: number): Promise<Project>{
+    async requireProjectAccess(userId: number, projectId: number): Promise<Project & { workspace: Workspace }>{
         const project = await this.prisma.project.findFirst({
             where: {
                 id: projectId,
@@ -43,7 +43,7 @@ export class WorkspaceAccessService {
         }
         return project;
     }
-    async requireTaskAccess (userId: number, taskId: number): Promise<Task>{
+    async requireTaskAccess (userId: number, taskId: number): Promise<Task & { project: Project }>{
         const task = await this.prisma.task.findFirst({
             where:{
                 id: taskId,

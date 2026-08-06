@@ -26,13 +26,7 @@ export class WorkspacesService {
         }
       }
     });
-    await this.activity.log({
-      userId, 
-      action: ActivityAction.CREATE,
-      entityType: EntityType.WORKSPACE,
-      entityId: workspace.id,
-      description: `Created workspace ${workspace.name}`,
-    });
+    await this.activity.logWorkspaceAction(workspace.id, userId, ActivityAction.CREATE, `Created workspace "${workspace.name}"`);
     return workspace;
   }
 
@@ -94,13 +88,7 @@ export class WorkspacesService {
       where: {id},
       data: updateWorkspaceDto,
     });
-    await this.activity.log({
-      userId,
-      action: ActivityAction.UPDATE,
-      entityType: EntityType.WORKSPACE,
-      entityId: id,
-      description: `Updated workspace "${workspace.name}"`,
-    });
+    await this.activity.logWorkspaceAction(id, userId, ActivityAction.UPDATE, `Updated workspace "${workspace.name}"`);
     return updated;
   }
 
@@ -110,13 +98,7 @@ export class WorkspacesService {
       where: {id},
       data: {deletedAt: new Date()},
     });
-    await this.activity.log({
-      userId,
-      action: ActivityAction.DELETE,
-      entityType: EntityType.WORKSPACE,
-      entityId: id,
-      description: `Deleted workspace "${workspace.name}"`,
-    });
+    await this.activity.logWorkspaceAction(id, userId, ActivityAction.DELETE, `Deleted workspace "${workspace.name}"`);
     return removed;
   }
   async getUserRole(userId: number, workspaceId: number){

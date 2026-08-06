@@ -14,7 +14,7 @@ export class TasksService {
     private readonly workspaceAccess: WorkspaceAccessService,
   ){}
   async createTask(projectId: number, createTaskDto: CreateTaskDto, creatorId: number) {
-    await this.workspaceAccess.requireProjectAccess(creatorId, projectId);
+    const project = await this.workspaceAccess.requireProjectAccess(creatorId, projectId);
     const task = await this.prisma.task.findFirst({
       where: { projectId, title: createTaskDto.title, deletedAt: null },
     });
@@ -23,13 +23,14 @@ export class TasksService {
     const created = await this.prisma.task.create({
       data: { ...createTaskDto, projectId, creatorId },
     });
-    await this.activity.log({
-      userId: creatorId,
-      action: ActivityAction.CREATE,
-      entityType: EntityType.TASK,
-      entityId: created.id,
-      description: `Created task "${created.title}"`,
-    });
+    await this.activity.logTaskAction(
+      project.workspaceId,
+      creatorId,
+      ActivityAction.CREATE,
+      created.id,
+      `Created task "${created.title}"`,
+      projectId,
+    );
     return created;
   }
 
@@ -76,47 +77,52 @@ export class TasksService {
   }
 
   async update( id: number, userId: number, updateTaskDto: UpdateTaskDto) {
-    const oldTask = await this.workspaceAccess.requireTaskAccess(userId,id)
+    const oldTask = await this.workspaceAccess.requireTaskAccess(userId, id);
+    const workspaceId = oldTask.project.workspaceId;
     const updated = await this.prisma.task.update({
       where: { id },
       data: updateTaskDto,
     });
     if (updateTaskDto.status && updateTaskDto.status !== oldTask.status) {
-      await this.activity.log({
+      await this.activity.logTaskAction(
+        workspaceId,
         userId,
-        action: ActivityAction.UPDATE,
-        entityType: EntityType.TASK,
-        entityId: id,
-        fieldName: 'status',
-        oldValue: oldTask.status,
-        newValue: updateTaskDto.status,
-        description: `Moved task "${oldTask.title}" from ${oldTask.status} to ${updateTaskDto.status}`,
-      });
+        ActivityAction.UPDATE,
+        id,
+        `Moved task "${oldTask.title}" from ${oldTask.status} to ${updateTaskDto.status}`,
+        oldTask.projectId,
+        'status',
+        oldTask.status,
+        updateTaskDto.status,
+      );
     } else {
-      await this.activity.log({
+      await this.activity.logTaskAction(
+        workspaceId,
         userId,
-        action: ActivityAction.UPDATE,
-        entityType: EntityType.TASK,
-        entityId: id,
-        description: `Updated task "${oldTask.title}"`,
-      });
+        ActivityAction.UPDATE,
+        id,
+        `Updated task "${oldTask.title}"`,
+        oldTask.projectId,
+      );
     }
     return updated;
   }
 
   async remove( id: number, userId: number) {
-    const task = await this.workspaceAccess.requireTaskAccess(userId,id);
+    const task = await this.workspaceAccess.requireTaskAccess(userId, id);
+    const workspaceId = task.project.workspaceId;
     const removed = await this.prisma.task.update({
       where: { id },
       data: { deletedAt: new Date() },
     });
-    await this.activity.log({
+    await this.activity.logTaskAction(
+      workspaceId,
       userId,
-      action: ActivityAction.DELETE,
-      entityType: EntityType.TASK,
-      entityId: id,
-      description: `Deleted task "${task.title}"`,
-    });
+      ActivityAction.DELETE,
+      id,
+      `Deleted task "${task.title}"`,
+      task.projectId,
+    );
     return removed;
   }
 }

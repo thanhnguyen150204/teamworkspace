@@ -70,13 +70,13 @@ export class ProjectsService {
       where: { id }, 
       data: { deletedAt: new Date() },
     });
-    await this.activity.log({
-      userId:currentUserId,
-      action: ActivityAction.DELETE,
-      entityType: EntityType.PROJECT,
-      entityId: id,
-      description: `Deleted project "${removed.name}"`,
-    });
+    await this.activity.logProjectAction(
+      workspaceId,
+      currentUserId,
+      ActivityAction.DELETE,
+      id,
+      `Deleted project "${removed.name}"`,
+    );
     return removed;
   }
 }

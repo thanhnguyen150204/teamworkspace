@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseIntPipe } from '@nestjs/common';
 import { ActivityService } from './activity.service';
 import { CreateActivityDto } from './dto/create-activity.dto';
 import { UpdateActivityDto } from './dto/update-activity.dto';
@@ -17,7 +17,7 @@ export class ActivityController {
   }
 
   @Get('workspace/:workspaceId')
-  getWorkspaceActivity(@Param('workspaceId') workspaceId: number, @CurrentUser('id') userId: number) {
+  getWorkspaceActivity(@Param('workspaceId', ParseIntPipe) workspaceId: number, @CurrentUser('id') userId: number) {
     return this.activityService.getWorkspaceActivity(workspaceId, userId);
   }
 }

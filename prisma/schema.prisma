@@ -80,6 +80,7 @@ model Workspace {
 
   memberships Membership[]
   projects    Project[]
+  activities Activity[]
 
   @@map("workspaces")
 }
@@ -195,6 +196,13 @@ model Activity {
 
   entityId Int
 
+  workspaceId Int
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+  projectId Int?
+  taskId Int?
+
+
   fieldName String?
 
   oldValue String?
@@ -209,6 +217,7 @@ model Activity {
 
   user User @relation(fields: [userId], references: [id])
 
+  @@index([workspaceId, createdAt])
   @@index([entityType, entityId])
   @@map("activities")
 }
