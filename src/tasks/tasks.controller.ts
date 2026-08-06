@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
@@ -11,21 +20,31 @@ export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
   @Post()
-  create(@Param('projectId') projectId: number,@Body() createTaskDto: CreateTaskDto, @CurrentUser('id') userId: number) {
-    return this.tasksService.createTask(projectId,createTaskDto,userId);
+  create(
+    @Param('projectId') projectId: number,
+    @Body() createTaskDto: CreateTaskDto,
+    @CurrentUser('id') userId: number,
+  ) {
+    return this.tasksService.createTask(+projectId, createTaskDto, +userId);
   }
 
   @Get()
-  findAll(@Param('projectId') projectId: number, @CurrentUser('id') userId: number) {
-    return this.tasksService.findAll(projectId, userId);
+  findAll(
+    @Param('projectId') projectId: number,
+    @CurrentUser('id') userId: number,
+  ) {
+    return this.tasksService.findAll(+projectId, +userId);
   }
   @Get('kanban')
-  getKanban(@Param('projectId') projectId: number, @CurrentUser('id') userId: number){
-    return this.tasksService.getKanban(projectId, userId);
+  getKanban(
+    @Param('projectId') projectId: number,
+    @CurrentUser('id') userId: number,
+  ) {
+    return this.tasksService.getKanban(+projectId, +userId);
   }
   @Get(':id')
   findOne(@Param('id') id: number, @CurrentUser('id') userId: number) {
-    return this.tasksService.findOne(id, userId);
+    return this.tasksService.findOne(+id, +userId);
   }
 
   @Patch(':id')
@@ -35,7 +54,7 @@ export class TasksController {
     @CurrentUser('id') userId: number,
     @Body() updateTaskDto: UpdateTaskDto,
   ) {
-    return this.tasksService.update( id,userId,updateTaskDto);
+    return this.tasksService.update(+id, +userId, updateTaskDto);
   }
 
   @Delete(':id')
@@ -44,6 +63,6 @@ export class TasksController {
     @Param('id') id: number,
     @CurrentUser('id') userId: number,
   ) {
-    return this.tasksService.remove(id,userId);
+    return this.tasksService.remove(+id, +userId);
   }
 }

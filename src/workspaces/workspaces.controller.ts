@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
 import { WorkspacesService } from './workspaces.service';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
@@ -9,15 +18,16 @@ import { WorkspaceRolesGuard } from 'src/auth/guards/WorkspaceRolesGuard';
 import { WorkspaceMembershipGuard } from 'src/auth/guards/workspace-membership.guard';
 import { WorkspaceRole } from '@prisma/client';
 
-
 @Controller('workspaces')
 @UseGuards(JwtAuthGuard)
 export class WorkspacesController {
-  constructor(private readonly workspacesService: WorkspacesService,
-  ) { }
+  constructor(private readonly workspacesService: WorkspacesService) {}
 
   @Post()
-  create(@CurrentUser('id') id: string, @Body() createWorkspaceDto: CreateWorkspaceDto) {
+  create(
+    @CurrentUser('id') id: string,
+    @Body() createWorkspaceDto: CreateWorkspaceDto,
+  ) {
     return this.workspacesService.create(+id, createWorkspaceDto);
   }
 
@@ -34,7 +44,11 @@ export class WorkspacesController {
   @Patch(':id')
   @UseGuards(WorkspaceMembershipGuard, WorkspaceRolesGuard)
   @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
-  update(@Param('id') id: string, @CurrentUser('id') userId: number, @Body() updateWorkspaceDto: UpdateWorkspaceDto) {
+  update(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: number,
+    @Body() updateWorkspaceDto: UpdateWorkspaceDto,
+  ) {
     return this.workspacesService.update(+id, userId, updateWorkspaceDto);
   }
 

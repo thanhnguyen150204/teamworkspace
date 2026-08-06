@@ -1,17 +1,21 @@
-import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CloudinaryService } from 'src/common/cloudinary/cloudinary.service';
 import { publicUserSelect } from './dto/user-select.dto';
 import { ChangePasswordDto, UpdatePasswordDto } from './dto/change-password';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import * as bcrypt from "bcrypt";
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly clodinary: CloudinaryService
-  ){}
+    private readonly clodinary: CloudinaryService,
+  ) {}
 
   findAll() {
     return this.prisma.user.findMany({
@@ -20,8 +24,8 @@ export class UsersService {
       },
       select: publicUserSelect,
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: 'desc',
+      },
     });
   }
 
@@ -41,13 +45,12 @@ export class UsersService {
         email,
         deletedAt: null,
         isActive: true,
-
       },
     });
   }
-  findRawByEmail(email: string){
+  findRawByEmail(email: string) {
     return this.prisma.user.findFirst({
-      where:{
+      where: {
         email,
       },
     });
@@ -60,7 +63,7 @@ export class UsersService {
       },
     });
     if (!user) {
-      throw new NotFoundException("User not found");
+      throw new NotFoundException('User not found');
     }
     return this.prisma.user.update({
       where: {
@@ -75,7 +78,7 @@ export class UsersService {
     return this.updateProfile(userId, updateUserDto);
   }
 
-  async updateAvatar(userId: number, file: Express.Multer.File){
+  async updateAvatar(userId: number, file: Express.Multer.File) {
     const avatarUrl = await this.clodinary.uploadFile(file, 'teamwork/avatars');
     return this.prisma.user.update({
       where: { id: userId },
@@ -90,13 +93,17 @@ export class UsersService {
         id: userId,
       },
     });
-    if (!user) throw new NotFoundException("User not found");
+    if (!user) throw new NotFoundException('User not found');
 
     const currentPwd = changePasswordDto.currentPassword;
     const isPasswordValid = await bcrypt.compare(currentPwd, user.password);
-    if (!isPasswordValid) throw new UnauthorizedException("Invalid current password");
+    if (!isPasswordValid)
+      throw new UnauthorizedException('Invalid current password');
 
-    const newPasswordHash = await bcrypt.hash(changePasswordDto.newPassword, 10);
+    const newPasswordHash = await bcrypt.hash(
+      changePasswordDto.newPassword,
+      10,
+    );
 
     await this.prisma.refreshToken.updateMany({
       where: {
@@ -125,10 +132,10 @@ export class UsersService {
 
   async remove(userId: number) {
     const user = await this.prisma.user.findUnique({
-      where: { id: userId }
+      where: { id: userId },
     });
     if (!user) {
-      throw new NotFoundException("User not found");
+      throw new NotFoundException('User not found');
     }
 
     await this.prisma.refreshToken.updateMany({
@@ -147,7 +154,7 @@ export class UsersService {
       },
       data: {
         deletedAt: new Date(),
-        isActive: false
+        isActive: false,
       },
       select: publicUserSelect,
     });

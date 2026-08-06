@@ -28,7 +28,12 @@ export class ActivityService {
     return this.prisma.activity.create({ data });
   }
 
-  logWorkspaceAction(workspaceId: number, userId: number, action: ActivityAction, description: string) {
+  logWorkspaceAction(
+    workspaceId: number,
+    userId: number,
+    action: ActivityAction,
+    description: string,
+  ) {
     return this.log({
       workspaceId,
       userId,
@@ -39,7 +44,13 @@ export class ActivityService {
     });
   }
 
-  logProjectAction(workspaceId: number, userId: number, action: ActivityAction, projectId: number, description: string) {
+  logProjectAction(
+    workspaceId: number,
+    userId: number,
+    action: ActivityAction,
+    projectId: number,
+    description: string,
+  ) {
     return this.log({
       workspaceId,
       userId,

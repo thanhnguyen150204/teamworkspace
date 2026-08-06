@@ -12,4 +12,4 @@ import { ActivityModule } from 'src/activity/activity.module';
   controllers: [ProjectsController],
   providers: [ProjectsService, WorkspaceRolesGuard, WorkspaceMembershipGuard],
 })
-export class ProjectsModule { }
+export class ProjectsModule {}

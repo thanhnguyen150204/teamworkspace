@@ -22,10 +22,11 @@ function sanitizeFileName(name: string): string {
 }
 @Injectable()
 export class AttachmentsService {
-  constructor(private readonly prisma: PrismaService,
+  constructor(
+    private readonly prisma: PrismaService,
     private readonly cloudinary: CloudinaryService,
-    private readonly workspaceAccess: WorkspaceAccessService
-  ) { }
+    private readonly workspaceAccess: WorkspaceAccessService,
+  ) {}
   private extractPublicId(fileUrl: string): string | null {
     try {
       return fileUrl
@@ -36,9 +37,16 @@ export class AttachmentsService {
       return null;
     }
   }
-  async upload(taskId: number, file: Express.Multer.File, currentUserId: number) {
+  async upload(
+    taskId: number,
+    file: Express.Multer.File,
+    currentUserId: number,
+  ) {
     await this.workspaceAccess.requireTaskAccess(currentUserId, taskId);
-    const fileUrl = await this.cloudinary.uploadFile(file, 'teamwork/attachments');
+    const fileUrl = await this.cloudinary.uploadFile(
+      file,
+      'teamwork/attachments',
+    );
     const fileName = sanitizeFileName(file.originalname);
     try {
       return await this.prisma.attachment.create({
@@ -48,12 +56,12 @@ export class AttachmentsService {
           fileUrl,
           fileSize: file.size,
           mimeType: file.mimetype,
-        }
+        },
       });
     } catch (error) {
       const publicId = this.extractPublicId(fileUrl);
       if (publicId) {
-        await this.cloudinary.deleteFile(publicId).catch(() => { });
+        await this.cloudinary.deleteFile(publicId).catch(() => {});
       }
       throw error;
     }
@@ -63,7 +71,7 @@ export class AttachmentsService {
     await this.workspaceAccess.requireTaskAccess(currentUserId, taskId);
     return this.prisma.attachment.findMany({
       where: {
-        taskId
+        taskId,
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -75,13 +83,13 @@ export class AttachmentsService {
       where: { id },
     });
     if (!attachment) throw new NotFoundException('Attachment not found');
-    if (attachment.taskId !== taskId){
+    if (attachment.taskId !== taskId) {
       throw new NotFoundException('Attachment not found in this task');
     }
 
     const publicId = this.extractPublicId(attachment.fileUrl);
     if (publicId) {
-      await this.cloudinary.deleteFile(publicId).catch(() => { });
+      await this.cloudinary.deleteFile(publicId).catch(() => {});
     }
     return this.prisma.attachment.delete({ where: { id } });
   }

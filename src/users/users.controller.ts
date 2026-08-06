@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, BadRequestException, UploadedFile, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Request,
+  BadRequestException,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -22,7 +34,7 @@ export class UsersController {
   getProfile(@CurrentUser('id') userId: number) {
     return this.usersService.findOne(userId);
   }
-  
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   findOne(@Param('id') id: string) {
@@ -31,28 +43,39 @@ export class UsersController {
 
   @Patch('me/avatar')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('file', {
-    storage: memoryStorage(),
-    limits: { fileSize: 2 * 1024 * 1024 },
-    fileFilter: (req, file, cb) => {
-      if (!file.mimetype.startsWith('image/'))
-        return cb(new BadRequestException('Only image files allowed'), false);
-      cb(null, true);
-    },
-  }))
-  updateAvatar(@CurrentUser('id') userId: number, @UploadedFile() file: Express.Multer.File) {
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 2 * 1024 * 1024 },
+      fileFilter: (req, file, cb) => {
+        if (!file.mimetype.startsWith('image/'))
+          return cb(new BadRequestException('Only image files allowed'), false);
+        cb(null, true);
+      },
+    }),
+  )
+  updateAvatar(
+    @CurrentUser('id') userId: number,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
     return this.usersService.updateAvatar(userId, file);
   }
 
   @Patch('me')
   @UseGuards(JwtAuthGuard)
-  updateProfile(@CurrentUser('id') userId: number, @Body() updateUserDto: UpdateProfileDto) {
+  updateProfile(
+    @CurrentUser('id') userId: number,
+    @Body() updateUserDto: UpdateProfileDto,
+  ) {
     return this.usersService.updateProfile(userId, updateUserDto);
   }
 
   @Patch('me/password')
   @UseGuards(JwtAuthGuard)
-  changePassword(@CurrentUser('id') userId: number, @Body() changePasswordDto: ChangePasswordDto) {
+  changePassword(
+    @CurrentUser('id') userId: number,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
     return this.usersService.changePassword(userId, changePasswordDto);
   }
 

@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -12,36 +21,61 @@ import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 @Controller('workspaces/:workspaceId/projects')
 @UseGuards(JwtAuthGuard, WorkspaceMembershipGuard)
 export class ProjectsController {
-  constructor(private readonly projectsService: ProjectsService) { }
+  constructor(private readonly projectsService: ProjectsService) {}
 
   @Post()
   @UseGuards(WorkspaceRolesGuard)
   @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
-  createProject(@Param('workspaceId') workspaceId: number, @Body() createProjectDto: CreateProjectDto, @CurrentUser('id') userId: number) {
-    return this.projectsService.create(workspaceId, createProjectDto, userId);
+  createProject(
+    @Param('workspaceId') workspaceId: number,
+    @Body() createProjectDto: CreateProjectDto,
+    @CurrentUser('id') userId: number,
+  ) {
+    return this.projectsService.create(+workspaceId, createProjectDto, +userId);
   }
 
   @Get()
-  findAll(@Param('workspaceId') workspaceId: number, @CurrentUser('id') userId: number) {
-    return this.projectsService.findAll(workspaceId, userId);
+  findAll(
+    @Param('workspaceId') workspaceId: number,
+    @CurrentUser('id') userId: number,
+  ) {
+    return this.projectsService.findAll(+workspaceId, +userId);
   }
 
   @Get(':id')
-  findOne(@Param('workspaceId') workspaceId: number, @Param('id') id: number, @CurrentUser('id') userId: number) {
-    return this.projectsService.findOne(workspaceId, id, userId);
+  findOne(
+    @Param('workspaceId') workspaceId: number,
+    @Param('id') id: number,
+    @CurrentUser('id') userId: number,
+  ) {
+    return this.projectsService.findOne(+workspaceId, +id, +userId);
   }
 
   @Patch(':id')
   @UseGuards(WorkspaceRolesGuard)
   @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
-  update(@Param('workspaceId') workspaceId: number, @Param('id') id: number, @CurrentUser('id') userId: number, @Body() updateProjectDto: UpdateProjectDto) {
-    return this.projectsService.update(workspaceId, id, updateProjectDto, userId);
+  update(
+    @Param('workspaceId') workspaceId: number,
+    @Param('id') id: number,
+    @CurrentUser('id') userId: number,
+    @Body() updateProjectDto: UpdateProjectDto,
+  ) {
+    return this.projectsService.update(
+      +workspaceId,
+      +id,
+      updateProjectDto,
+      +userId,
+    );
   }
 
   @Delete(':id')
   @UseGuards(WorkspaceRolesGuard)
   @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
-  remove(@Param('workspaceId') workspaceId: number, @Param('id') id: number, @CurrentUser('id') userId: number) {
-    return this.projectsService.remove(workspaceId, id, userId);
+  remove(
+    @Param('workspaceId') workspaceId: number,
+    @Param('id') id: number,
+    @CurrentUser('id') userId: number,
+  ) {
+    return this.projectsService.remove(+workspaceId, +id, +userId);
   }
 }

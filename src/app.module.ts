@@ -12,17 +12,18 @@ import { AttachmentsModule } from './attachments/attachments.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { CommonModule } from './common/common.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD} from '@nestjs/core';
+import { APP_GUARD } from '@nestjs/core';
 import { WorkspacesModule } from './workspaces/workspaces.module';
 import { ActivityModule } from './activity/activity.module';
 
-
 @Module({
   imports: [
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 150,
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 150,
+      },
+    ]),
     AuthModule,
     UsersModule,
     WorkspacesModule,
@@ -33,15 +34,13 @@ import { ActivityModule } from './activity/activity.module';
     AttachmentsModule,
     PrismaModule,
     CommonModule,
-    ActivityModule,  
+    ActivityModule,
   ],
   controllers: [AppController],
-  providers: [AppService, {provide: APP_GUARD, useClass: ThrottlerGuard}],
+  providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer
-      .apply(LoggerMiddleware)
-      .forRoutes('*path'); 
+    consumer.apply(LoggerMiddleware).forRoutes('*path');
   }
 }

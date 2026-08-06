@@ -3,7 +3,7 @@ import { CreateTaskDto } from './create-task.dto';
 import { IsDateString, IsOptional } from 'class-validator';
 
 export class UpdateTaskDto extends PartialType(CreateTaskDto) {
-    @IsDateString()
-    @IsOptional()
-    completedAt?: Date;
+  @IsDateString()
+  @IsOptional()
+  completedAt?: Date;
 }

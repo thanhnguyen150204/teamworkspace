@@ -9,6 +9,10 @@ import { WorkspaceRolesGuard } from 'src/auth/guards/WorkspaceRolesGuard';
 @Module({
   imports: [WorkspacesModule, PrismaModule],
   controllers: [MembershipsController],
-  providers: [MembershipsService, WorkspaceMembershipGuard, WorkspaceRolesGuard],
+  providers: [
+    MembershipsService,
+    WorkspaceMembershipGuard,
+    WorkspaceRolesGuard,
+  ],
 })
-export class MembershipsModule { }
+export class MembershipsModule {}

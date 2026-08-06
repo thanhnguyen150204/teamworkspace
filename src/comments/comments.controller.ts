@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
@@ -10,9 +19,13 @@ import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
-  @Post() 
-  create(@Param('taskId') taskId: number, @CurrentUser('id') userId: number, @Body() createCommentDto: CreateCommentDto) {
-    return this.commentsService.create(taskId,userId,createCommentDto);
+  @Post()
+  create(
+    @Param('taskId') taskId: number,
+    @CurrentUser('id') userId: number,
+    @Body() createCommentDto: CreateCommentDto,
+  ) {
+    return this.commentsService.create(taskId, userId, createCommentDto);
   }
 
   @Get()
@@ -21,17 +34,30 @@ export class CommentsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: number, @Param('taskId') taskId: number, @CurrentUser('id') userId: number) {
-    return this.commentsService.findOne(id,taskId, userId);
+  findOne(
+    @Param('id') id: number,
+    @Param('taskId') taskId: number,
+    @CurrentUser('id') userId: number,
+  ) {
+    return this.commentsService.findOne(id, taskId, userId);
   }
 
   @Patch(':id')
-  update(@Param('id') id: number, @Param('taskId') taskId: number, @CurrentUser('id') userId: number, @Body() updateCommentDto: UpdateCommentDto) {
-    return this.commentsService.update(id,taskId, userId, updateCommentDto);
+  update(
+    @Param('id') id: number,
+    @Param('taskId') taskId: number,
+    @CurrentUser('id') userId: number,
+    @Body() updateCommentDto: UpdateCommentDto,
+  ) {
+    return this.commentsService.update(id, taskId, userId, updateCommentDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: number,@Param('taskId') taskId: number, @CurrentUser('id') userId: number) {
-    return this.commentsService.remove(id,taskId, userId);
+  remove(
+    @Param('id') id: number,
+    @Param('taskId') taskId: number,
+    @CurrentUser('id') userId: number,
+  ) {
+    return this.commentsService.remove(id, taskId, userId);
   }
 }

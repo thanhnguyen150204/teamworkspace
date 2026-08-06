@@ -11,7 +11,12 @@ import { WorkspaceAccessService } from './workspace-access.service';
 @Module({
   imports: [UsersModule, forwardRef(() => ActivityModule), PrismaModule],
   controllers: [WorkspacesController],
-  providers: [WorkspacesService, WorkspaceRolesGuard, WorkspaceMembershipGuard, WorkspaceAccessService],
+  providers: [
+    WorkspacesService,
+    WorkspaceRolesGuard,
+    WorkspaceMembershipGuard,
+    WorkspaceAccessService,
+  ],
   exports: [WorkspacesService, WorkspaceAccessService],
 })
-export class WorkspacesModule { }
+export class WorkspacesModule {}
