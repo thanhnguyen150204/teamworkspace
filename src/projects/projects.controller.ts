@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -27,7 +28,7 @@ export class ProjectsController {
   @UseGuards(WorkspaceRolesGuard)
   @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
   createProject(
-    @Param('workspaceId') workspaceId: number,
+    @Param('workspaceId', ParseIntPipe) workspaceId: number,
     @Body() createProjectDto: CreateProjectDto,
     @CurrentUser('id') userId: number,
   ) {
@@ -36,7 +37,7 @@ export class ProjectsController {
 
   @Get()
   findAll(
-    @Param('workspaceId') workspaceId: number,
+    @Param('workspaceId', ParseIntPipe) workspaceId: number,
     @CurrentUser('id') userId: number,
   ) {
     return this.projectsService.findAll(+workspaceId, +userId);
@@ -44,7 +45,7 @@ export class ProjectsController {
 
   @Get(':id')
   findOne(
-    @Param('workspaceId') workspaceId: number,
+    @Param('workspaceId', ParseIntPipe) workspaceId: number,
     @Param('id') id: number,
     @CurrentUser('id') userId: number,
   ) {
@@ -55,8 +56,8 @@ export class ProjectsController {
   @UseGuards(WorkspaceRolesGuard)
   @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
   update(
-    @Param('workspaceId') workspaceId: number,
-    @Param('id') id: number,
+    @Param('workspaceId', ParseIntPipe) workspaceId: number,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser('id') userId: number,
     @Body() updateProjectDto: UpdateProjectDto,
   ) {
@@ -72,8 +73,8 @@ export class ProjectsController {
   @UseGuards(WorkspaceRolesGuard)
   @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
   remove(
-    @Param('workspaceId') workspaceId: number,
-    @Param('id') id: number,
+    @Param('workspaceId', ParseIntPipe) workspaceId: number,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser('id') userId: number,
   ) {
     return this.projectsService.remove(+workspaceId, +id, +userId);

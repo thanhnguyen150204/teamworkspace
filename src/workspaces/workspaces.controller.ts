@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { WorkspacesService } from './workspaces.service';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
@@ -25,37 +26,43 @@ export class WorkspacesController {
 
   @Post()
   create(
-    @CurrentUser('id') id: string,
+    @CurrentUser('id') id: number,
     @Body() createWorkspaceDto: CreateWorkspaceDto,
   ) {
-    return this.workspacesService.create(+id, createWorkspaceDto);
+    return this.workspacesService.create(id, createWorkspaceDto);
   }
 
   @Get()
-  findAll(@CurrentUser('id') id: string) {
-    return this.workspacesService.findAll(+id);
+  findAll(@CurrentUser('id') id: number) {
+    return this.workspacesService.findAll(id);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string, @CurrentUser('id') userId: number) {
-    return this.workspacesService.findOne(+id, userId);
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser('id') userId: number,
+  ) {
+    return this.workspacesService.findOne(id, userId);
   }
 
   @Patch(':id')
   @UseGuards(WorkspaceMembershipGuard, WorkspaceRolesGuard)
   @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
   update(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser('id') userId: number,
     @Body() updateWorkspaceDto: UpdateWorkspaceDto,
   ) {
-    return this.workspacesService.update(+id, userId, updateWorkspaceDto);
+    return this.workspacesService.update(id, userId, updateWorkspaceDto);
   }
 
   @Delete(':id')
   @UseGuards(WorkspaceMembershipGuard, WorkspaceRolesGuard)
   @Roles(WorkspaceRole.OWNER)
-  remove(@Param('id') id: string, @CurrentUser('id') userId: number) {
-    return this.workspacesService.remove(+id, userId);
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser('id') userId: number,
+  ) {
+    return this.workspacesService.remove(id, userId);
   }
 }

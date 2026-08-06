@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -21,7 +22,7 @@ export class CommentsController {
 
   @Post()
   create(
-    @Param('taskId') taskId: number,
+    @Param('taskId', ParseIntPipe) taskId: number,
     @CurrentUser('id') userId: number,
     @Body() createCommentDto: CreateCommentDto,
   ) {
@@ -29,14 +30,17 @@ export class CommentsController {
   }
 
   @Get()
-  findAll(@Param('taskId') taskId: number, @CurrentUser('id') userId: number) {
+  findAll(
+    @Param('taskId', ParseIntPipe) taskId: number,
+    @CurrentUser('id') userId: number,
+  ) {
     return this.commentsService.findAll(taskId, userId);
   }
 
   @Get(':id')
   findOne(
-    @Param('id') id: number,
-    @Param('taskId') taskId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('taskId', ParseIntPipe) taskId: number,
     @CurrentUser('id') userId: number,
   ) {
     return this.commentsService.findOne(id, taskId, userId);
@@ -44,8 +48,8 @@ export class CommentsController {
 
   @Patch(':id')
   update(
-    @Param('id') id: number,
-    @Param('taskId') taskId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('taskId', ParseIntPipe) taskId: number,
     @CurrentUser('id') userId: number,
     @Body() updateCommentDto: UpdateCommentDto,
   ) {
@@ -54,8 +58,8 @@ export class CommentsController {
 
   @Delete(':id')
   remove(
-    @Param('id') id: number,
-    @Param('taskId') taskId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('taskId', ParseIntPipe) taskId: number,
     @CurrentUser('id') userId: number,
   ) {
     return this.commentsService.remove(id, taskId, userId);

@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
@@ -21,7 +22,7 @@ export class TasksController {
 
   @Post()
   create(
-    @Param('projectId') projectId: number,
+    @Param('projectId', ParseIntPipe) projectId: number,
     @Body() createTaskDto: CreateTaskDto,
     @CurrentUser('id') userId: number,
   ) {
@@ -30,27 +31,30 @@ export class TasksController {
 
   @Get()
   findAll(
-    @Param('projectId') projectId: number,
+    @Param('projectId', ParseIntPipe) projectId: number,
     @CurrentUser('id') userId: number,
   ) {
     return this.tasksService.findAll(+projectId, +userId);
   }
   @Get('kanban')
   getKanban(
-    @Param('projectId') projectId: number,
+    @Param('projectId', ParseIntPipe) projectId: number,
     @CurrentUser('id') userId: number,
   ) {
     return this.tasksService.getKanban(+projectId, +userId);
   }
   @Get(':id')
-  findOne(@Param('id') id: number, @CurrentUser('id') userId: number) {
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser('id') userId: number,
+  ) {
     return this.tasksService.findOne(+id, +userId);
   }
 
   @Patch(':id')
   update(
-    @Param('projectId') projectId: number,
-    @Param('id') id: number,
+    @Param('projectId', ParseIntPipe) projectId: number,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser('id') userId: number,
     @Body() updateTaskDto: UpdateTaskDto,
   ) {
@@ -59,8 +63,8 @@ export class TasksController {
 
   @Delete(':id')
   remove(
-    @Param('projectId') projectId: number,
-    @Param('id') id: number,
+    @Param('projectId', ParseIntPipe) projectId: number,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser('id') userId: number,
   ) {
     return this.tasksService.remove(+id, +userId);
