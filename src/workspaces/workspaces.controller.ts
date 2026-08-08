@@ -29,7 +29,7 @@ export class WorkspacesController {
     @CurrentUser('id') id: number,
     @Body() createWorkspaceDto: CreateWorkspaceDto,
   ) {
-    return this.workspacesService.create(id, createWorkspaceDto);
+    return this.workspacesService.create({ userId: id, createWorkspaceDto });
   }
 
   @Get()
@@ -42,7 +42,7 @@ export class WorkspacesController {
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser('id') userId: number,
   ) {
-    return this.workspacesService.findOne(id, userId);
+    return this.workspacesService.findOne({ id, currentUserId: userId });
   }
 
   @Patch(':id')
@@ -53,7 +53,7 @@ export class WorkspacesController {
     @CurrentUser('id') userId: number,
     @Body() updateWorkspaceDto: UpdateWorkspaceDto,
   ) {
-    return this.workspacesService.update(id, userId, updateWorkspaceDto);
+    return this.workspacesService.update({id, userId, updateWorkspaceDto});
   }
 
   @Delete(':id')
@@ -63,6 +63,6 @@ export class WorkspacesController {
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser('id') userId: number,
   ) {
-    return this.workspacesService.remove(id, userId);
+    return this.workspacesService.remove({ id, userId });
   }
 }

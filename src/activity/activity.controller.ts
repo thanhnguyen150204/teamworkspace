@@ -24,6 +24,9 @@ export class ActivityController {
     @Param('workspaceId', ParseIntPipe) workspaceId: number,
     @CurrentUser('id') userId: number,
   ) {
-    return this.activityService.getWorkspaceActivity(workspaceId, userId);
+    return this.activityService.getWorkspaceActivity({
+      workspaceId,
+      currentUserId: userId,
+    });
   }
 }

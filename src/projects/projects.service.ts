@@ -16,12 +16,18 @@ export class ProjectsService {
     private readonly prisma: PrismaService,
     private readonly workspaceAccess: WorkspaceAccessService,
     private readonly activity: ActivityService,
-  ) {}
+  ) { }
 
   async create(
-    workspaceId: number,
-    createProjectDto: CreateProjectDto,
-    currentUserId: number,
+    {
+      workspaceId,
+      createProjectDto,
+      currentUserId,
+    }: {
+      workspaceId: number,
+      createProjectDto: CreateProjectDto,
+      currentUserId: number,
+    }
   ) {
     await this.workspaceAccess.requireMembership(currentUserId, workspaceId);
     const projectExist = await this.prisma.project.findFirst({
@@ -42,7 +48,13 @@ export class ProjectsService {
     });
   }
 
-  async findAll(workspaceId: number, currentUserId: number) {
+  async findAll({
+    workspaceId,
+    currentUserId,
+  }: {
+    workspaceId: number;
+    currentUserId: number;
+  }) {
     await this.workspaceAccess.requireMembership(currentUserId, workspaceId);
     return this.prisma.project.findMany({
       where: {
@@ -52,7 +64,7 @@ export class ProjectsService {
     });
   }
 
-  async findOne(workspaceId: number, id: number, currentUserId: number) {
+  async findOne({ workspaceId, id, currentUserId }: { workspaceId: number, id: number, currentUserId: number }) {
     await this.workspaceAccess.requireProjectAccess(currentUserId, id);
     const project = await this.prisma.project.findFirst({
       where: { id, workspaceId, deletedAt: null },
@@ -62,10 +74,7 @@ export class ProjectsService {
   }
 
   async update(
-    workspaceId: number,
-    id: number,
-    updateProjectDto: UpdateProjectDto,
-    currentUserId: number,
+    { id, currentUserId, updateProjectDto }: { id: number, currentUserId: number ,updateProjectDto: UpdateProjectDto,},
   ) {
     await this.workspaceAccess.requireProjectAccess(currentUserId, id);
     return this.prisma.project.update({
@@ -78,8 +87,8 @@ export class ProjectsService {
     });
   }
 
-  async remove(workspaceId: number, id: number, currentUserId: number) {
-    await this.findOne(workspaceId, id, currentUserId);
+  async remove({workspaceId, id, currentUserId}: {workspaceId: number, id: number, currentUserId: number}) {
+    await this.findOne({workspaceId, id, currentUserId});
     const removed = await this.prisma.project.update({
       where: { id },
       data: { deletedAt: new Date() },

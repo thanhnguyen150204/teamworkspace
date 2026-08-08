@@ -13,12 +13,16 @@ export class CommentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly workspaceAccess: WorkspaceAccessService,
-  ) {}
+  ) { }
   async create(
-    taskId: number,
-    userId: number,
-    createCommentDto: CreateCommentDto,
-  ) {
+    { taskId,
+      userId,
+      createCommentDto, }
+      : {
+        taskId: number,
+        userId: number,
+        createCommentDto: CreateCommentDto,
+      }) {
     await this.workspaceAccess.requireTaskAccess(userId, taskId);
     return this.prisma.comment.create({
       data: {
@@ -29,7 +33,13 @@ export class CommentsService {
     });
   }
 
-  async findAll(taskId: number, currentUserId: number) {
+  async findAll({
+    taskId,
+    currentUserId,
+  }: {
+    taskId: number;
+    currentUserId: number;
+  }) {
     await this.workspaceAccess.requireTaskAccess(currentUserId, taskId);
     return this.prisma.comment.findMany({
       where: {
@@ -48,7 +58,7 @@ export class CommentsService {
     });
   }
 
-  async findOne(id: number, taskId: number, currentUserId: number) {
+  async findOne({ id, taskId, currentUserId }: { id: number, taskId: number, currentUserId: number }) {
     await this.workspaceAccess.requireTaskAccess(currentUserId, taskId);
     const comment = await this.prisma.comment.findUnique({
       where: {
@@ -60,12 +70,9 @@ export class CommentsService {
   }
 
   async update(
-    id: number,
-    taskId: number,
-    currentUserId: number,
-    updateCommentDto: UpdateCommentDto,
+    { id, taskId, currentUserId, updateCommentDto }: { id: number, taskId: number, currentUserId: number, updateCommentDto: UpdateCommentDto },
   ) {
-    const comment = await this.findOne(id, taskId, currentUserId);
+    const comment = await this.findOne({id, taskId, currentUserId});
     if (comment.userId !== currentUserId) {
       throw new ForbiddenException('You can only edit your own comments!');
     }
@@ -77,8 +84,8 @@ export class CommentsService {
     });
   }
 
-  async remove(id: number, taskId: number, currentUserId: number) {
-    const comment = await this.findOne(id, taskId, currentUserId);
+  async remove({id, taskId, currentUserId}: {id: number, taskId: number, currentUserId: number}) {
+    const comment = await this.findOne({id, taskId, currentUserId});
     if (comment.userId !== currentUserId) {
       throw new ForbiddenException('You can only delete your own comments!');
     }

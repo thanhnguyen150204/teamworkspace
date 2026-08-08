@@ -26,7 +26,7 @@ export class AttachmentsService {
     private readonly prisma: PrismaService,
     private readonly cloudinary: CloudinaryService,
     private readonly workspaceAccess: WorkspaceAccessService,
-  ) {}
+  ) { }
   private extractPublicId(fileUrl: string): string | null {
     try {
       return fileUrl
@@ -38,11 +38,16 @@ export class AttachmentsService {
     }
   }
   async upload(
-    taskId: number,
-    file: Express.Multer.File,
-    currentUserId: number,
+    { taskId,
+      file,
+      userId, }
+      : {
+        taskId: number,
+        file: Express.Multer.File,
+        userId: number,
+      }
   ) {
-    await this.workspaceAccess.requireTaskAccess(currentUserId, taskId);
+    await this.workspaceAccess.requireTaskAccess(userId, taskId);
     const fileUrl = await this.cloudinary.uploadFile(
       file,
       'teamwork/attachments',
@@ -61,13 +66,19 @@ export class AttachmentsService {
     } catch (error) {
       const publicId = this.extractPublicId(fileUrl);
       if (publicId) {
-        await this.cloudinary.deleteFile(publicId).catch(() => {});
+        await this.cloudinary.deleteFile(publicId).catch(() => { });
       }
       throw error;
     }
   }
 
-  async findAll(taskId: number, currentUserId: number) {
+  async findAll({
+    taskId,
+    currentUserId,
+  }: {
+    taskId: number;
+    currentUserId: number;
+  }) {
     await this.workspaceAccess.requireTaskAccess(currentUserId, taskId);
     return this.prisma.attachment.findMany({
       where: {
@@ -77,7 +88,7 @@ export class AttachmentsService {
     });
   }
 
-  async remove(id: number, taskId: number, currentUserId: number) {
+  async remove({id, taskId, currentUserId}:{id: number, taskId: number, currentUserId: number}) {
     await this.workspaceAccess.requireTaskAccess(currentUserId, taskId);
     const attachment = await this.prisma.attachment.findUnique({
       where: { id },
@@ -89,7 +100,7 @@ export class AttachmentsService {
 
     const publicId = this.extractPublicId(attachment.fileUrl);
     if (publicId) {
-      await this.cloudinary.deleteFile(publicId).catch(() => {});
+      await this.cloudinary.deleteFile(publicId).catch(() => { });
     }
     return this.prisma.attachment.delete({ where: { id } });
   }

@@ -68,9 +68,12 @@ describe('WorkspacesService', () => {
   describe('create', () => {
     it('should create workspace with OWNER membership and log activity', async () => {
       (prisma.workspace.create as jest.Mock).mockResolvedValue(mockWorkspace);
-      const result = await service.create(1, {
-        name: 'Workspace Alpha',
-        description: 'Test Workspace',
+      const result = await service.create({
+        userId: 1,
+        createWorkspaceDto: {
+          name: 'Workspace Alpha',
+          description: 'Test Workspace',
+        },
       });
 
       expect(prisma.workspace.create).toHaveBeenCalledWith({
@@ -95,13 +98,17 @@ describe('WorkspacesService', () => {
       workspaceAccess.requireMembership.mockRejectedValue(
         new ForbiddenException('Workspace not found or you are not member'),
       );
-      await expect(service.findOne(1, 2)).rejects.toThrow(ForbiddenException);
+      await expect(
+        service.findOne({ id: 1, currentUserId: 2 }),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('should throw NotFoundException if workspace deleted or not found', async () => {
       workspaceAccess.requireMembership.mockResolvedValue({} as any);
       (prisma.workspace.findFirst as jest.Mock).mockResolvedValue(null);
-      await expect(service.findOne(99, 1)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.findOne({ id: 99, currentUserId: 1 }),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should return workspace details on happy path', async () => {
@@ -110,7 +117,7 @@ describe('WorkspacesService', () => {
         mockWorkspace,
       );
 
-      const result = await service.findOne(1, 1);
+      const result = await service.findOne({ id: 1, currentUserId: 1 });
       expect(result).toEqual(mockWorkspace);
     });
   });
@@ -126,7 +133,11 @@ describe('WorkspacesService', () => {
         name: 'Updated Name',
       });
 
-      const result = await service.update(1, 1, { name: 'Updated Name' });
+      const result = await service.update({
+        id: 1,
+        userId: 1,
+        updateWorkspaceDto: { name: 'Updated Name' },
+      });
       expect(result.name).toBe('Updated Name');
       expect(activity.logWorkspaceAction).toHaveBeenCalled();
     });
@@ -143,7 +154,7 @@ describe('WorkspacesService', () => {
         deletedAt: new Date(),
       });
 
-      const result = await service.remove(1, 1);
+      const result = await service.remove({ id: 1, userId: 1 });
       expect(result.deletedAt).toBeDefined();
       expect(activity.logWorkspaceAction).toHaveBeenCalled();
     });

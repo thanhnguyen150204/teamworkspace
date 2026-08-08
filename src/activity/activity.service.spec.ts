@@ -65,7 +65,10 @@ describe('ActivityService', () => {
       workspaceAccess.requireMembership.mockResolvedValue({} as any);
       (prisma.activity.findMany as jest.Mock).mockResolvedValue([{ id: 1 }]);
 
-      const result = await service.getWorkspaceActivity(1, 2);
+      const result = await service.getWorkspaceActivity({
+        workspaceId: 1,
+        currentUserId: 2,
+      });
       expect(workspaceAccess.requireMembership).toHaveBeenCalledWith(2, 1);
       expect(result).toEqual([{ id: 1 }]);
     });

@@ -44,7 +44,7 @@ export class AttachmentsController {
     file: Express.Multer.File,
     @CurrentUser('id') userId: number,
   ) {
-    return this.attachmentsService.upload(taskId, file, userId);
+    return this.attachmentsService.upload({taskId, file, userId});
   }
 
   @Get()
@@ -52,15 +52,15 @@ export class AttachmentsController {
     @Param('taskId', ParseIntPipe) taskId: number,
     @CurrentUser('id') userId: number,
   ) {
-    return this.attachmentsService.findAll(taskId, userId);
+    return this.attachmentsService.findAll({ taskId, currentUserId: userId });
   }
 
   @Delete(':id')
   remove(
     @Param('id', ParseIntPipe) id: number,
     @Param('taskId', ParseIntPipe) taskId: number,
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') currentUserId: number,
   ) {
-    return this.attachmentsService.remove(id, taskId, userId);
+    return this.attachmentsService.remove({id, taskId, currentUserId});
   }
 }

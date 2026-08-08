@@ -69,7 +69,11 @@ describe('ProjectsService', () => {
       (prisma.project.findFirst as jest.Mock).mockResolvedValue(mockProject);
 
       await expect(
-        service.create(10, { name: 'Project One' }, 1),
+        service.create({
+          workspaceId: 10,
+          createProjectDto: { name: 'Project One' },
+          currentUserId: 1,
+        }),
       ).rejects.toThrow(ConflictException);
     });
 
@@ -78,7 +82,11 @@ describe('ProjectsService', () => {
       (prisma.project.findFirst as jest.Mock).mockResolvedValue(null);
       (prisma.project.create as jest.Mock).mockResolvedValue(mockProject);
 
-      const result = await service.create(10, { name: 'Project One' }, 1);
+      const result = await service.create({
+        workspaceId: 10,
+        createProjectDto: { name: 'Project One' },
+        currentUserId: 1,
+      });
       expect(result).toEqual(mockProject);
     });
   });
@@ -88,24 +96,28 @@ describe('ProjectsService', () => {
       workspaceAccess.requireProjectAccess.mockRejectedValue(
         new ForbiddenException(),
       );
-      await expect(service.findOne(10, 1, 1)).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(
+        service.findOne({ workspaceId: 10, id: 1, currentUserId: 1 }),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('should throw NotFoundException if project deleted or non-existent', async () => {
       workspaceAccess.requireProjectAccess.mockResolvedValue({} as any);
       (prisma.project.findFirst as jest.Mock).mockResolvedValue(null);
-      await expect(service.findOne(10, 999, 1)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.findOne({ workspaceId: 10, id: 999, currentUserId: 1 }),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should return project on happy path', async () => {
       workspaceAccess.requireProjectAccess.mockResolvedValue({} as any);
       (prisma.project.findFirst as jest.Mock).mockResolvedValue(mockProject);
 
-      const result = await service.findOne(10, 1, 1);
+      const result = await service.findOne({
+        workspaceId: 10,
+        id: 1,
+        currentUserId: 1,
+      });
       expect(result).toEqual(mockProject);
     });
   });
@@ -119,7 +131,11 @@ describe('ProjectsService', () => {
         deletedAt: new Date(),
       });
 
-      const result = await service.remove(10, 1, 1);
+      const result = await service.remove({
+        workspaceId: 10,
+        id: 1,
+        currentUserId: 1,
+      });
       expect(result.deletedAt).toBeDefined();
       expect(activity.logProjectAction).toHaveBeenCalled();
     });

@@ -26,7 +26,7 @@ export class CommentsController {
     @CurrentUser('id') userId: number,
     @Body() createCommentDto: CreateCommentDto,
   ) {
-    return this.commentsService.create(taskId, userId, createCommentDto);
+    return this.commentsService.create({taskId, userId, createCommentDto});
   }
 
   @Get()
@@ -34,34 +34,34 @@ export class CommentsController {
     @Param('taskId', ParseIntPipe) taskId: number,
     @CurrentUser('id') userId: number,
   ) {
-    return this.commentsService.findAll(taskId, userId);
+    return this.commentsService.findAll({ taskId, currentUserId: userId });
   }
 
   @Get(':id')
   findOne(
     @Param('id', ParseIntPipe) id: number,
     @Param('taskId', ParseIntPipe) taskId: number,
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') currentUserId: number,
   ) {
-    return this.commentsService.findOne(id, taskId, userId);
+    return this.commentsService.findOne({id, taskId, currentUserId});
   }
 
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
     @Param('taskId', ParseIntPipe) taskId: number,
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') currentUserId: number,
     @Body() updateCommentDto: UpdateCommentDto,
   ) {
-    return this.commentsService.update(id, taskId, userId, updateCommentDto);
+    return this.commentsService.update({id, taskId, currentUserId, updateCommentDto});
   }
 
   @Delete(':id')
   remove(
     @Param('id', ParseIntPipe) id: number,
     @Param('taskId', ParseIntPipe) taskId: number,
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') currentUserId: number,
   ) {
-    return this.commentsService.remove(id, taskId, userId);
+    return this.commentsService.remove({id, taskId, currentUserId});
   }
 }

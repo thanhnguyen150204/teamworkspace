@@ -88,7 +88,13 @@ export class ActivityService {
     });
   }
 
-  async getWorkspaceActivity(workspaceId: number, currentUserId: number) {
+  async getWorkspaceActivity({
+    workspaceId,
+    currentUserId,
+  }: {
+    workspaceId: number;
+    currentUserId: number;
+  }) {
     await this.workspaceAccess.requireMembership(currentUserId, workspaceId);
     return this.prisma.activity.findMany({
       where: {

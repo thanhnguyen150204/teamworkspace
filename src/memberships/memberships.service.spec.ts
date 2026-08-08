@@ -41,7 +41,11 @@ describe('MembershipsService', () => {
     it('should throw NotFoundException if user email does not exist', async () => {
       (prisma.user.findFirst as jest.Mock).mockResolvedValue(null);
       await expect(
-        service.invite(1, 'nonexistent@example.com', WorkspaceRole.MEMBER),
+        service.invite({
+          workspaceId: 1,
+          email: 'nonexistent@example.com',
+          role: WorkspaceRole.MEMBER,
+        }),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -57,7 +61,11 @@ describe('MembershipsService', () => {
       });
 
       await expect(
-        service.invite(1, 'member@example.com', WorkspaceRole.MEMBER),
+        service.invite({
+          workspaceId: 1,
+          email: 'member@example.com',
+          role: WorkspaceRole.MEMBER,
+        }),
       ).rejects.toThrow(ConflictException);
     });
 
@@ -74,11 +82,11 @@ describe('MembershipsService', () => {
         role: WorkspaceRole.MEMBER,
       });
 
-      const result = await service.invite(
-        1,
-        'newmember@example.com',
-        WorkspaceRole.MEMBER,
-      );
+      const result = await service.invite({
+        workspaceId: 1,
+        email: 'newmember@example.com',
+        role: WorkspaceRole.MEMBER,
+      });
       expect(result).toEqual({
         id: 11,
         userId: 2,
@@ -97,7 +105,11 @@ describe('MembershipsService', () => {
         role: WorkspaceRole.ADMIN,
       });
 
-      const result = await service.updateRole(1, 2, WorkspaceRole.ADMIN);
+      const result = await service.updateRole({
+        workspaceId: 1,
+        userId: 2,
+        newRole: WorkspaceRole.ADMIN,
+      });
       expect(result.role).toBe(WorkspaceRole.ADMIN);
     });
   });

@@ -12,14 +12,18 @@ export class TasksService {
     private readonly prisma: PrismaService,
     private readonly activity: ActivityService,
     private readonly workspaceAccess: WorkspaceAccessService,
-  ) {}
+  ) { }
   async createTask(
-    projectId: number,
-    createTaskDto: CreateTaskDto,
-    creatorId: number,
+    { projectId,
+      createTaskDto,
+      userId }: {
+        projectId: number,
+        createTaskDto: CreateTaskDto,
+        userId: number,
+      }
   ) {
     const project = await this.workspaceAccess.requireProjectAccess(
-      creatorId,
+      userId,
       projectId,
     );
     const task = await this.prisma.task.findFirst({
@@ -28,11 +32,11 @@ export class TasksService {
     if (task) throw new ConflictException('Task has been existed');
 
     const created = await this.prisma.task.create({
-      data: { ...createTaskDto, projectId, creatorId },
+      data: { ...createTaskDto, projectId, creatorId:userId },
     });
     await this.activity.logTaskAction(
       project.workspaceId,
-      creatorId,
+      userId,
       ActivityAction.CREATE,
       created.id,
       `Created task "${created.title}"`,
@@ -41,7 +45,13 @@ export class TasksService {
     return created;
   }
 
-  async findAll(projectId: number, currentUserId: number) {
+  async findAll({
+    projectId,
+    currentUserId,
+  }: {
+    projectId: number;
+    currentUserId: number;
+  }) {
     await this.workspaceAccess.requireProjectAccess(currentUserId, projectId);
     return this.prisma.task.findMany({
       where: {
@@ -50,7 +60,14 @@ export class TasksService {
       },
     });
   }
-  async getKanban(projectId: number, currentUserId: number) {
+
+  async getKanban({
+    projectId,
+    currentUserId,
+  }: {
+    projectId: number;
+    currentUserId: number;
+  }) {
     await this.workspaceAccess.requireProjectAccess(currentUserId, projectId);
     const tasks = await this.prisma.task.findMany({
       where: {
@@ -78,7 +95,13 @@ export class TasksService {
     };
   }
 
-  async findOne(taskId: number, currentUserId: number) {
+  async findOne({
+    taskId,
+    currentUserId,
+  }: {
+    taskId: number;
+    currentUserId: number;
+  }) {
     const task = await this.workspaceAccess.requireTaskAccess(
       currentUserId,
       taskId,
@@ -86,7 +109,7 @@ export class TasksService {
     return task;
   }
 
-  async update(id: number, userId: number, updateTaskDto: UpdateTaskDto) {
+  async update({id, userId, updateTaskDto}: {id: number, userId: number, updateTaskDto: UpdateTaskDto}) {
     const oldTask = await this.workspaceAccess.requireTaskAccess(userId, id);
     const workspaceId = oldTask.project.workspaceId;
     const updated = await this.prisma.task.update({
@@ -118,7 +141,7 @@ export class TasksService {
     return updated;
   }
 
-  async remove(id: number, userId: number) {
+  async remove({ id, userId }: { id: number; userId: number }) {
     const task = await this.workspaceAccess.requireTaskAccess(userId, id);
     const workspaceId = task.project.workspaceId;
     const removed = await this.prisma.task.update({

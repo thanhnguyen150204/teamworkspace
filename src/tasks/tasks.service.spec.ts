@@ -77,7 +77,11 @@ describe('TasksService', () => {
       (prisma.task.findFirst as jest.Mock).mockResolvedValue(mockTask);
 
       await expect(
-        service.createTask(10, { title: 'Design UI' }, 1),
+        service.createTask({
+          projectId: 10,
+          createTaskDto: { title: 'Design UI' },
+          userId: 1,
+        }),
       ).rejects.toThrow(ConflictException);
     });
 
@@ -88,7 +92,11 @@ describe('TasksService', () => {
       (prisma.task.findFirst as jest.Mock).mockResolvedValue(null);
       (prisma.task.create as jest.Mock).mockResolvedValue(mockTask);
 
-      const result = await service.createTask(10, { title: 'Design UI' }, 1);
+      const result = await service.createTask({
+        projectId: 10,
+        createTaskDto: { title: 'Design UI' },
+        userId: 1,
+      });
       expect(result).toEqual(mockTask);
       expect(activity.logTaskAction).toHaveBeenCalled();
     });
@@ -106,7 +114,7 @@ describe('TasksService', () => {
       ];
       (prisma.task.findMany as jest.Mock).mockResolvedValue(tasks);
 
-      const result = await service.getKanban(10, 1);
+      const result = await service.getKanban({ projectId: 10, currentUserId: 1 });
       expect(result.TODO.length).toBe(1);
       expect(result.IN_PROGRESS.length).toBe(1);
       expect(result.REVIEW.length).toBe(0);
@@ -122,8 +130,12 @@ describe('TasksService', () => {
         status: TaskStatus.IN_PROGRESS,
       });
 
-      const result = await service.update(1, 1, {
-        status: TaskStatus.IN_PROGRESS,
+      const result = await service.update({
+        id: 1,
+        userId: 1,
+        updateTaskDto: {
+          status: TaskStatus.IN_PROGRESS,
+        },
       });
       expect(result.status).toBe(TaskStatus.IN_PROGRESS);
       expect(activity.logTaskAction).toHaveBeenCalledWith(
@@ -148,7 +160,7 @@ describe('TasksService', () => {
         deletedAt: new Date(),
       });
 
-      const result = await service.remove(1, 1);
+      const result = await service.remove({ id: 1, userId: 1 });
       expect(result.deletedAt).toBeDefined();
       expect(activity.logTaskAction).toHaveBeenCalled();
     });

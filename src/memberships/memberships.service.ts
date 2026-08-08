@@ -9,7 +9,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 @Injectable()
 export class MembershipsService {
   constructor(private readonly prisma: PrismaService) {}
-  async invite(workspaceId: number, email: string, role: WorkspaceRole) {
+  async invite({workspaceId, email, role}: {workspaceId: number, email: string, role: WorkspaceRole}) {
     const user = await this.prisma.user.findFirst({
       where: { email, deletedAt: null },
     });
@@ -37,14 +37,20 @@ export class MembershipsService {
     });
   }
 
-  updateRole(workspaceId: number, userId: number, newRole: WorkspaceRole) {
+  updateRole({workspaceId, userId, newRole}: {workspaceId: number, userId: number, newRole: WorkspaceRole}) {
     return this.prisma.membership.update({
       where: { userId_workspaceId: { userId, workspaceId } },
       data: { role: newRole },
     });
   }
 
-  removeMember(workspaceId: number, userId: number) {
+  removeMember({
+    workspaceId,
+    userId,
+  }: {
+    workspaceId: number;
+    userId: number;
+  }) {
     return this.prisma.membership.delete({
       where: { userId_workspaceId: { userId, workspaceId } },
     });

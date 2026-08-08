@@ -26,7 +26,7 @@ export class TasksController {
     @Body() createTaskDto: CreateTaskDto,
     @CurrentUser('id') userId: number,
   ) {
-    return this.tasksService.createTask(+projectId, createTaskDto, +userId);
+    return this.tasksService.createTask({projectId, createTaskDto, userId});
   }
 
   @Get()
@@ -34,39 +34,37 @@ export class TasksController {
     @Param('projectId', ParseIntPipe) projectId: number,
     @CurrentUser('id') userId: number,
   ) {
-    return this.tasksService.findAll(+projectId, +userId);
+    return this.tasksService.findAll({ projectId, currentUserId: userId });
   }
   @Get('kanban')
   getKanban(
     @Param('projectId', ParseIntPipe) projectId: number,
     @CurrentUser('id') userId: number,
   ) {
-    return this.tasksService.getKanban(+projectId, +userId);
+    return this.tasksService.getKanban({ projectId, currentUserId: userId });
   }
   @Get(':id')
   findOne(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser('id') userId: number,
   ) {
-    return this.tasksService.findOne(+id, +userId);
+    return this.tasksService.findOne({ taskId: id, currentUserId: userId });
   }
 
   @Patch(':id')
   update(
-    @Param('projectId', ParseIntPipe) projectId: number,
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser('id') userId: number,
     @Body() updateTaskDto: UpdateTaskDto,
   ) {
-    return this.tasksService.update(+id, +userId, updateTaskDto);
-  }
+    return this.tasksService.update({id, userId, updateTaskDto});
+  } 
 
   @Delete(':id')
   remove(
-    @Param('projectId', ParseIntPipe) projectId: number,
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser('id') userId: number,
   ) {
-    return this.tasksService.remove(+id, +userId);
+    return this.tasksService.remove({ id, userId });
   }
 }

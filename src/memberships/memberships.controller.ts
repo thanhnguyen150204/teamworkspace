@@ -30,7 +30,7 @@ export class MembershipsController {
     @Param('workspaceId', ParseIntPipe) workspaceId: number,
     @Body() dto: InviteMemberDto,
   ) {
-    return this.membershipsService.invite(workspaceId, dto.email, dto.role);
+    return this.membershipsService.invite({workspaceId, email: dto.email,role: dto.role});
   }
 
   @Get()
@@ -46,7 +46,7 @@ export class MembershipsController {
     @Param('userId', ParseIntPipe) userId: number,
     @Body() dto: UpdateMemberRoleDto,
   ) {
-    return this.membershipsService.updateRole(workspaceId, userId, dto.role);
+    return this.membershipsService.updateRole({workspaceId, userId, newRole: dto.role});
   }
 
   @Delete(':userId')
@@ -56,6 +56,6 @@ export class MembershipsController {
     @Param('workspaceId', ParseIntPipe) workspaceId: number,
     @Param('userId', ParseIntPipe) userId: number,
   ) {
-    return this.membershipsService.removeMember(workspaceId, userId);
+    return this.membershipsService.removeMember({ workspaceId, userId });
   }
 }

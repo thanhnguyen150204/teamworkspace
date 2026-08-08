@@ -15,7 +15,13 @@ export class WorkspacesService {
     private readonly workspaceAccess: WorkspaceAccessService,
   ) {}
 
-  async create(userId: number, createWorkspaceDto: CreateWorkspaceDto) {
+  async create({
+    userId,
+    createWorkspaceDto,
+  }: {
+    userId: number;
+    createWorkspaceDto: CreateWorkspaceDto;
+  }) {
     const workspace = await this.prisma.workspace.create({
       data: {
         ...createWorkspaceDto,
@@ -67,7 +73,13 @@ export class WorkspacesService {
     });
   }
 
-  async findOne(id: number, currentUserId: number) {
+  async findOne({
+    id,
+    currentUserId,
+  }: {
+    id: number;
+    currentUserId: number;
+  }) {
     await this.workspaceAccess.requireMembership(currentUserId, id);
     const workspace = await this.prisma.workspace.findFirst({
       where: {
@@ -91,12 +103,16 @@ export class WorkspacesService {
     return workspace;
   }
 
-  async update(
-    id: number,
-    userId: number,
-    updateWorkspaceDto: UpdateWorkspaceDto,
-  ) {
-    const workspace = await this.findOne(id, userId);
+  async update({
+    id,
+    userId,
+    updateWorkspaceDto,
+  }: {
+    id: number;
+    userId: number;
+    updateWorkspaceDto: UpdateWorkspaceDto;
+  }) {
+    const workspace = await this.findOne({ id, currentUserId: userId });
     const updated = await this.prisma.workspace.update({
       where: { id },
       data: updateWorkspaceDto,
@@ -110,8 +126,8 @@ export class WorkspacesService {
     return updated;
   }
 
-  async remove(id: number, userId: number) {
-    const workspace = await this.findOne(id, userId);
+  async remove({ id, userId }: { id: number; userId: number }) {
+    const workspace = await this.findOne({ id, currentUserId: userId });
     const removed = await this.prisma.workspace.update({
       where: { id },
       data: { deletedAt: new Date() },
@@ -124,7 +140,14 @@ export class WorkspacesService {
     );
     return removed;
   }
-  async getUserRole(userId: number, workspaceId: number) {
+
+  async getUserRole({
+    userId,
+    workspaceId,
+  }: {
+    userId: number;
+    workspaceId: number;
+  }) {
     const membership = await this.prisma.membership.findUnique({
       where: {
         userId_workspaceId: { userId, workspaceId },

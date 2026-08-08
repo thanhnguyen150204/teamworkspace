@@ -22,7 +22,7 @@ import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 @Controller('workspaces/:workspaceId/projects')
 @UseGuards(JwtAuthGuard, WorkspaceMembershipGuard)
 export class ProjectsController {
-  constructor(private readonly projectsService: ProjectsService) {}
+  constructor(private readonly projectsService: ProjectsService) { }
 
   @Post()
   @UseGuards(WorkspaceRolesGuard)
@@ -30,9 +30,9 @@ export class ProjectsController {
   createProject(
     @Param('workspaceId', ParseIntPipe) workspaceId: number,
     @Body() createProjectDto: CreateProjectDto,
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') currentUserId: number,
   ) {
-    return this.projectsService.create(+workspaceId, createProjectDto, +userId);
+    return this.projectsService.create({workspaceId, createProjectDto, currentUserId});
   }
 
   @Get()
@@ -40,33 +40,32 @@ export class ProjectsController {
     @Param('workspaceId', ParseIntPipe) workspaceId: number,
     @CurrentUser('id') userId: number,
   ) {
-    return this.projectsService.findAll(+workspaceId, +userId);
+    return this.projectsService.findAll({ workspaceId, currentUserId: userId });
   }
 
   @Get(':id')
   findOne(
     @Param('workspaceId', ParseIntPipe) workspaceId: number,
-    @Param('id') id: number,
-    @CurrentUser('id') userId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser('id') currentUserId: number,
   ) {
-    return this.projectsService.findOne(+workspaceId, +id, +userId);
+    return this.projectsService.findOne({ workspaceId, id, currentUserId });
   }
 
   @Patch(':id')
   @UseGuards(WorkspaceRolesGuard)
   @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
   update(
-    @Param('workspaceId', ParseIntPipe) workspaceId: number,
     @Param('id', ParseIntPipe) id: number,
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') currentUserId: number,
     @Body() updateProjectDto: UpdateProjectDto,
   ) {
     return this.projectsService.update(
-      +workspaceId,
-      +id,
-      updateProjectDto,
-      +userId,
-    );
+      {
+        id,
+        updateProjectDto,
+        currentUserId,
+      });
   }
 
   @Delete(':id')
@@ -75,8 +74,8 @@ export class ProjectsController {
   remove(
     @Param('workspaceId', ParseIntPipe) workspaceId: number,
     @Param('id', ParseIntPipe) id: number,
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') currentUserId: number,
   ) {
-    return this.projectsService.remove(+workspaceId, +id, +userId);
+    return this.projectsService.remove({workspaceId, id, currentUserId});
   }
 }
