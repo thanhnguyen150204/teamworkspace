@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ActivityAction, EntityType } from '@prisma/client';
 import { WorkspaceAccessService } from 'src/workspaces/workspace-access.service';
+import { Prisma } from '@prisma/client';
 
 export interface LogActivityParams {
   workspaceId: number;
@@ -22,10 +23,10 @@ export class ActivityService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly workspaceAccess: WorkspaceAccessService,
-  ) {}
+  ) { }
 
-  log(data: LogActivityParams) {
-    return this.prisma.activity.create({ data });
+  log(data: LogActivityParams, prisma: Prisma.TransactionClient = this.prisma) {
+    return prisma.activity.create({ data });
   }
 
   logWorkspaceAction(
@@ -33,6 +34,7 @@ export class ActivityService {
     userId: number,
     action: ActivityAction,
     description: string,
+    prisma: Prisma.TransactionClient = this.prisma
   ) {
     return this.log({
       workspaceId,
@@ -41,7 +43,9 @@ export class ActivityService {
       entityType: EntityType.WORKSPACE,
       entityId: workspaceId,
       description,
-    });
+    },
+      prisma,
+    );
   }
 
   logProjectAction(
@@ -50,6 +54,7 @@ export class ActivityService {
     action: ActivityAction,
     projectId: number,
     description: string,
+    prisma: Prisma.TransactionClient = this.prisma
   ) {
     return this.log({
       workspaceId,
@@ -59,7 +64,9 @@ export class ActivityService {
       entityType: EntityType.PROJECT,
       entityId: projectId,
       description,
-    });
+    },
+      prisma
+    );
   }
 
   logTaskAction(
@@ -72,6 +79,7 @@ export class ActivityService {
     fieldName?: string,
     oldValue?: string,
     newValue?: string,
+    prisma: Prisma.TransactionClient = this.prisma
   ) {
     return this.log({
       workspaceId,
@@ -85,7 +93,9 @@ export class ActivityService {
       fieldName,
       oldValue,
       newValue,
-    });
+    },
+      prisma
+    );
   }
 
   async getWorkspaceActivity({

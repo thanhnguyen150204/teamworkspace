@@ -39,6 +39,7 @@ describe('TasksService', () => {
         create: jest.fn(),
         update: jest.fn(),
       },
+      $transaction: jest.fn().mockImplementation(async (cb) => cb(mockPrisma)),
     };
 
     const mockActivity = {
@@ -148,6 +149,7 @@ describe('TasksService', () => {
         'status',
         TaskStatus.TODO,
         TaskStatus.IN_PROGRESS,
+        expect.anything(),
       );
     });
   });

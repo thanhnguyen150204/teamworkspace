@@ -32,7 +32,7 @@ export class TasksService {
     if (task) throw new ConflictException('Task has been existed');
 
     const created = await this.prisma.task.create({
-      data: { ...createTaskDto, projectId, creatorId:userId },
+      data: { ...createTaskDto, projectId, creatorId: userId },
     });
     await this.activity.logTaskAction(
       project.workspaceId,
@@ -109,36 +109,43 @@ export class TasksService {
     return task;
   }
 
-  async update({id, userId, updateTaskDto}: {id: number, userId: number, updateTaskDto: UpdateTaskDto}) {
+  async update({ id, userId, updateTaskDto }: { id: number, userId: number, updateTaskDto: UpdateTaskDto }) {
     const oldTask = await this.workspaceAccess.requireTaskMember(userId, id);
     const workspaceId = oldTask.project.workspaceId;
-    const updated = await this.prisma.task.update({
-      where: { id },
-      data: updateTaskDto,
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.task.update({
+        where: { id },
+        data: updateTaskDto,
+      });
+      if (updateTaskDto.status && updateTaskDto.status !== oldTask.status) {
+        await this.activity.logTaskAction(
+          workspaceId,
+          userId,
+          ActivityAction.UPDATE,
+          id,
+          `Moved task "${oldTask.title}" from ${oldTask.status} to ${updateTaskDto.status}`,
+          oldTask.projectId,
+          'status',
+          oldTask.status,
+          updateTaskDto.status,
+          tx,
+        );
+      } else {
+        await this.activity.logTaskAction(
+          workspaceId,
+          userId,
+          ActivityAction.UPDATE,
+          id,
+          `Updated task "${oldTask.title}"`,
+          oldTask.projectId,
+          undefined,
+          undefined,
+          undefined,
+          tx,
+        );
+      }
+      return updated;
     });
-    if (updateTaskDto.status && updateTaskDto.status !== oldTask.status) {
-      await this.activity.logTaskAction(
-        workspaceId,
-        userId,
-        ActivityAction.UPDATE,
-        id,
-        `Moved task "${oldTask.title}" from ${oldTask.status} to ${updateTaskDto.status}`,
-        oldTask.projectId,
-        'status',
-        oldTask.status,
-        updateTaskDto.status,
-      );
-    } else {
-      await this.activity.logTaskAction(
-        workspaceId,
-        userId,
-        ActivityAction.UPDATE,
-        id,
-        `Updated task "${oldTask.title}"`,
-        oldTask.projectId,
-      );
-    }
-    return updated;
   }
 
   async remove({ id, userId }: { id: number; userId: number }) {
