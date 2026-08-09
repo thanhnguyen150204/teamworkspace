@@ -44,6 +44,7 @@ export class CommentsService {
     return this.prisma.comment.findMany({
       where: {
         taskId,
+        deletedAt: null,
       },
       include: {
         user: {
@@ -60,9 +61,11 @@ export class CommentsService {
 
   async findOne({ id, taskId, currentUserId }: { id: number, taskId: number, currentUserId: number }) {
     await this.workspaceAccess.requireTaskMember(currentUserId, taskId);
-    const comment = await this.prisma.comment.findUnique({
+    const comment = await this.prisma.comment.findFirst({
       where: {
         id,
+        taskId,
+        deletedAt: null,
       },
     });
     if (!comment) throw new NotFoundException('Comment not found');
@@ -89,10 +92,11 @@ export class CommentsService {
     if (comment.userId !== currentUserId) {
       throw new ForbiddenException('You can only delete your own comments!');
     }
-    return this.prisma.comment.delete({
+    return this.prisma.comment.update({
       where: {
         id,
       },
+      data: { deletedAt: new Date()}
     });
   }
 }

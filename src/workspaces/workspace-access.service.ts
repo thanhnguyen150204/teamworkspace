@@ -51,6 +51,7 @@ export class WorkspaceAccessService {
           memberships: {
             some: {
               userId,
+              user: {deletedAt: null, isActive: true},
             },
           },
         },
@@ -81,6 +82,7 @@ export class WorkspaceAccessService {
             memberships: {
               some: {
                 userId,
+                user: {deletedAt: null, isActive: true},
               },
             },
           },
