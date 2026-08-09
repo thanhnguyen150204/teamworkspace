@@ -23,7 +23,7 @@ export class CommentsService {
         userId: number,
         createCommentDto: CreateCommentDto,
       }) {
-    await this.workspaceAccess.requireTaskAccess(userId, taskId);
+    await this.workspaceAccess.requireTaskMember(userId, taskId);
     return this.prisma.comment.create({
       data: {
         ...createCommentDto,
@@ -40,7 +40,7 @@ export class CommentsService {
     taskId: number;
     currentUserId: number;
   }) {
-    await this.workspaceAccess.requireTaskAccess(currentUserId, taskId);
+    await this.workspaceAccess.requireTaskMember(currentUserId, taskId);
     return this.prisma.comment.findMany({
       where: {
         taskId,
@@ -59,7 +59,7 @@ export class CommentsService {
   }
 
   async findOne({ id, taskId, currentUserId }: { id: number, taskId: number, currentUserId: number }) {
-    await this.workspaceAccess.requireTaskAccess(currentUserId, taskId);
+    await this.workspaceAccess.requireTaskMember(currentUserId, taskId);
     const comment = await this.prisma.comment.findUnique({
       where: {
         id,

@@ -6,17 +6,18 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { WorkspaceAccessService } from 'src/workspaces/workspace-access.service';
 
 @Injectable()
 export class WorkspaceMembershipGuard implements CanActivate {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly workspaceAccess: WorkspaceAccessService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const userId: number = request.user?.id;
 
-    const rawId = request.params.workspaceId ?? request.params.id;
-    const workspaceId = parseInt(rawId);
+    const rawWorkspaceId = request.params.workspaceId ;
+    const workspaceId = parseInt(rawWorkspaceId);
 
     if (!workspaceId || isNaN(workspaceId)) {
       throw new BadRequestException('Workspace ID is required');
@@ -25,14 +26,7 @@ export class WorkspaceMembershipGuard implements CanActivate {
       throw new ForbiddenException('Not authenticated');
     }
 
-    const membership = await this.prisma.membership.findUnique({
-      where: {
-        userId_workspaceId: { userId, workspaceId },
-      },
-    });
-    if (!membership) {
-      throw new ForbiddenException('You are not a member of this workspace');
-    }
+    const membership = await this.workspaceAccess.requireWorkspaceMember(userId, workspaceId);
     request.workspaceMembership = membership;
     return true;
   }

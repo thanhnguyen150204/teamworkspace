@@ -1,11 +1,11 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { Membership, Project, Task, Workspace } from '@prisma/client';
+import { Membership, Project, Task, Workspace, WorkspaceRole } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class WorkspaceAccessService {
   constructor(private readonly prisma: PrismaService) {}
-  async requireMembership(
+  async requireWorkspaceMember(
     userId: number,
     workspaceId: number,
   ): Promise<Membership> {
@@ -23,7 +23,22 @@ export class WorkspaceAccessService {
     }
     return membership;
   }
-  async requireProjectAccess(
+
+  async requireWorkspaceRole(
+    userId: number,
+    workspaceId: number,
+    requiredRoles: WorkspaceRole[],
+  ): Promise<Membership>{
+    const membership = await this.requireWorkspaceMember(userId, workspaceId);
+    if(requiredRoles.length > 0 && !requiredRoles.includes(membership.role)){
+      throw new ForbiddenException(
+        `This action requires one of these roles: ${requiredRoles.join(', ')}`
+      );
+    }
+    return membership;
+  }
+
+  async requireProjectMember(
     userId: number,
     projectId: number,
   ): Promise<Project & { workspace: Workspace }> {
@@ -51,7 +66,7 @@ export class WorkspaceAccessService {
     }
     return project;
   }
-  async requireTaskAccess(
+  async requireTaskMember(
     userId: number,
     taskId: number,
   ): Promise<Task & { project: Project }> {

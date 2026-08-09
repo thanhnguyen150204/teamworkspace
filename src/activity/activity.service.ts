@@ -95,7 +95,7 @@ export class ActivityService {
     workspaceId: number;
     currentUserId: number;
   }) {
-    await this.workspaceAccess.requireMembership(currentUserId, workspaceId);
+    await this.workspaceAccess.requireWorkspaceMember(currentUserId, workspaceId);
     return this.prisma.activity.findMany({
       where: {
         workspaceId,

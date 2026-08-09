@@ -29,7 +29,7 @@ export class ProjectsService {
       currentUserId: number,
     }
   ) {
-    await this.workspaceAccess.requireMembership(currentUserId, workspaceId);
+    await this.workspaceAccess.requireWorkspaceMember(currentUserId, workspaceId);
     const projectExist = await this.prisma.project.findFirst({
       where: {
         name: createProjectDto.name,
@@ -55,7 +55,7 @@ export class ProjectsService {
     workspaceId: number;
     currentUserId: number;
   }) {
-    await this.workspaceAccess.requireMembership(currentUserId, workspaceId);
+    await this.workspaceAccess.requireWorkspaceMember(currentUserId, workspaceId);
     return this.prisma.project.findMany({
       where: {
         workspaceId,
@@ -65,7 +65,7 @@ export class ProjectsService {
   }
 
   async findOne({ workspaceId, id, currentUserId }: { workspaceId: number, id: number, currentUserId: number }) {
-    await this.workspaceAccess.requireProjectAccess(currentUserId, id);
+    await this.workspaceAccess.requireProjectMember(currentUserId, id);
     const project = await this.prisma.project.findFirst({
       where: { id, workspaceId, deletedAt: null },
     });
@@ -76,7 +76,7 @@ export class ProjectsService {
   async update(
     { id, currentUserId, updateProjectDto }: { id: number, currentUserId: number ,updateProjectDto: UpdateProjectDto,},
   ) {
-    await this.workspaceAccess.requireProjectAccess(currentUserId, id);
+    await this.workspaceAccess.requireProjectMember(currentUserId, id);
     return this.prisma.project.update({
       where: {
         id,

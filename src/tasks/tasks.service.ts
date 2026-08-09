@@ -22,7 +22,7 @@ export class TasksService {
         userId: number,
       }
   ) {
-    const project = await this.workspaceAccess.requireProjectAccess(
+    const project = await this.workspaceAccess.requireProjectMember(
       userId,
       projectId,
     );
@@ -52,7 +52,7 @@ export class TasksService {
     projectId: number;
     currentUserId: number;
   }) {
-    await this.workspaceAccess.requireProjectAccess(currentUserId, projectId);
+    await this.workspaceAccess.requireProjectMember(currentUserId, projectId);
     return this.prisma.task.findMany({
       where: {
         projectId,
@@ -68,7 +68,7 @@ export class TasksService {
     projectId: number;
     currentUserId: number;
   }) {
-    await this.workspaceAccess.requireProjectAccess(currentUserId, projectId);
+    await this.workspaceAccess.requireProjectMember(currentUserId, projectId);
     const tasks = await this.prisma.task.findMany({
       where: {
         projectId,
@@ -102,7 +102,7 @@ export class TasksService {
     taskId: number;
     currentUserId: number;
   }) {
-    const task = await this.workspaceAccess.requireTaskAccess(
+    const task = await this.workspaceAccess.requireTaskMember(
       currentUserId,
       taskId,
     );
@@ -110,7 +110,7 @@ export class TasksService {
   }
 
   async update({id, userId, updateTaskDto}: {id: number, userId: number, updateTaskDto: UpdateTaskDto}) {
-    const oldTask = await this.workspaceAccess.requireTaskAccess(userId, id);
+    const oldTask = await this.workspaceAccess.requireTaskMember(userId, id);
     const workspaceId = oldTask.project.workspaceId;
     const updated = await this.prisma.task.update({
       where: { id },
@@ -142,7 +142,7 @@ export class TasksService {
   }
 
   async remove({ id, userId }: { id: number; userId: number }) {
-    const task = await this.workspaceAccess.requireTaskAccess(userId, id);
+    const task = await this.workspaceAccess.requireTaskMember(userId, id);
     const workspaceId = task.project.workspaceId;
     const removed = await this.prisma.task.update({
       where: { id },

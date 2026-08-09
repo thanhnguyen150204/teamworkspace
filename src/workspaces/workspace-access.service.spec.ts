@@ -36,10 +36,10 @@ describe('WorkspaceAccessService', () => {
     expect(service).toBeDefined();
   });
 
-  describe('requireMembership', () => {
+  describe('requireWorkspaceMember', () => {
     it('should throw ForbiddenException if user is not member of workspace', async () => {
       (prisma.membership.findFirst as jest.Mock).mockResolvedValue(null);
-      await expect(service.requireMembership(1, 10)).rejects.toThrow(
+      await expect(service.requireWorkspaceMember(1, 10)).rejects.toThrow(
         ForbiddenException,
       );
     });
@@ -55,15 +55,15 @@ describe('WorkspaceAccessService', () => {
         mockMembership,
       );
 
-      const result = await service.requireMembership(1, 10);
+      const result = await service.requireWorkspaceMember(1, 10);
       expect(result).toEqual(mockMembership);
     });
   });
 
-  describe('requireProjectAccess', () => {
+  describe('requireProjectMember', () => {
     it('should throw ForbiddenException if project not found or no access', async () => {
       (prisma.project.findFirst as jest.Mock).mockResolvedValue(null);
-      await expect(service.requireProjectAccess(1, 5)).rejects.toThrow(
+      await expect(service.requireProjectMember(1, 5)).rejects.toThrow(
         ForbiddenException,
       );
     });
@@ -77,15 +77,15 @@ describe('WorkspaceAccessService', () => {
       };
       (prisma.project.findFirst as jest.Mock).mockResolvedValue(mockProject);
 
-      const result = await service.requireProjectAccess(1, 5);
+      const result = await service.requireProjectMember(1, 5);
       expect(result).toEqual(mockProject);
     });
   });
 
-  describe('requireTaskAccess', () => {
+  describe('requireTaskMember', () => {
     it('should throw ForbiddenException if task not found or no access', async () => {
       (prisma.task.findFirst as jest.Mock).mockResolvedValue(null);
-      await expect(service.requireTaskAccess(1, 99)).rejects.toThrow(
+      await expect(service.requireTaskMember(1, 99)).rejects.toThrow(
         ForbiddenException,
       );
     });
@@ -98,7 +98,7 @@ describe('WorkspaceAccessService', () => {
       };
       (prisma.task.findFirst as jest.Mock).mockResolvedValue(mockTask);
 
-      const result = await service.requireTaskAccess(1, 99);
+      const result = await service.requireTaskMember(1, 99);
       expect(result).toEqual(mockTask);
     });
   });

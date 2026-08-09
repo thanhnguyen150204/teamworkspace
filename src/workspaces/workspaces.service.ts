@@ -80,7 +80,7 @@ export class WorkspacesService {
     id: number;
     currentUserId: number;
   }) {
-    await this.workspaceAccess.requireMembership(currentUserId, id);
+    await this.workspaceAccess.requireWorkspaceMember(currentUserId, id);
     const workspace = await this.prisma.workspace.findFirst({
       where: {
         id,

@@ -47,7 +47,7 @@ export class AttachmentsService {
         userId: number,
       }
   ) {
-    await this.workspaceAccess.requireTaskAccess(userId, taskId);
+    await this.workspaceAccess.requireTaskMember(userId, taskId);
     const fileUrl = await this.cloudinary.uploadFile(
       file,
       'teamwork/attachments',
@@ -79,7 +79,7 @@ export class AttachmentsService {
     taskId: number;
     currentUserId: number;
   }) {
-    await this.workspaceAccess.requireTaskAccess(currentUserId, taskId);
+    await this.workspaceAccess.requireTaskMember(currentUserId, taskId);
     return this.prisma.attachment.findMany({
       where: {
         taskId,
@@ -89,7 +89,7 @@ export class AttachmentsService {
   }
 
   async remove({id, taskId, currentUserId}:{id: number, taskId: number, currentUserId: number}) {
-    await this.workspaceAccess.requireTaskAccess(currentUserId, taskId);
+    await this.workspaceAccess.requireTaskMember(currentUserId, taskId);
     const attachment = await this.prisma.attachment.findUnique({
       where: { id },
     });
