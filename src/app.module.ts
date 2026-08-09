@@ -12,7 +12,7 @@ import { AttachmentsModule } from './attachments/attachments.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { CommonModule } from './common/common.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { WorkspacesModule } from './workspaces/workspaces.module';
 import { ActivityModule } from './activity/activity.module';
 import { ConfigModule } from '@nestjs/config';
@@ -21,12 +21,14 @@ import databaseConfig from './config/database.config';
 import authConfig from './config/auth.config';
 import cloudinaryConfig from './config/cloudinary.config';
 import { envValidationSchema } from './config/env.validation';
+import { PrismaClientExceptionFilter } from './common/filters/prisma-exception.filter';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig,databaseConfig, authConfig, cloudinaryConfig],
+      load: [appConfig, databaseConfig, authConfig, cloudinaryConfig],
       validationSchema: envValidationSchema,
     }),
     ThrottlerModule.forRoot([
@@ -48,7 +50,12 @@ import { envValidationSchema } from './config/env.validation';
     ActivityModule,
   ],
   controllers: [AppController],
-  providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [AppService,
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_FILTER, useClass: HttpExceptionFilter},
+    { provide: APP_FILTER, useClass: PrismaClientExceptionFilter },
+
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
