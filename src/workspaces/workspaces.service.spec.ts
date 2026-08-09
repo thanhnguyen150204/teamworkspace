@@ -39,7 +39,7 @@ describe('WorkspacesService', () => {
       logWorkspaceAction: jest.fn().mockResolvedValue({}),
     };
     const mockWorkspaceAccessService = {
-      requireMembership: jest.fn(),
+      requireWorkspaceMember: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -95,7 +95,7 @@ describe('WorkspacesService', () => {
 
   describe('findOne', () => {
     it('should throw ForbiddenException if user is not member', async () => {
-      workspaceAccess.requireMembership.mockRejectedValue(
+      workspaceAccess.requireWorkspaceMember.mockRejectedValue(
         new ForbiddenException('Workspace not found or you are not member'),
       );
       await expect(
@@ -104,7 +104,7 @@ describe('WorkspacesService', () => {
     });
 
     it('should throw NotFoundException if workspace deleted or not found', async () => {
-      workspaceAccess.requireMembership.mockResolvedValue({} as any);
+      workspaceAccess.requireWorkspaceMember.mockResolvedValue({} as any);
       (prisma.workspace.findFirst as jest.Mock).mockResolvedValue(null);
       await expect(
         service.findOne({ id: 99, currentUserId: 1 }),
@@ -112,7 +112,7 @@ describe('WorkspacesService', () => {
     });
 
     it('should return workspace details on happy path', async () => {
-      workspaceAccess.requireMembership.mockResolvedValue({} as any);
+      workspaceAccess.requireWorkspaceMember.mockResolvedValue({} as any);
       (prisma.workspace.findFirst as jest.Mock).mockResolvedValue(
         mockWorkspace,
       );
@@ -124,7 +124,7 @@ describe('WorkspacesService', () => {
 
   describe('update', () => {
     it('should update workspace details and log action', async () => {
-      workspaceAccess.requireMembership.mockResolvedValue({} as any);
+      workspaceAccess.requireWorkspaceMember.mockResolvedValue({} as any);
       (prisma.workspace.findFirst as jest.Mock).mockResolvedValue(
         mockWorkspace,
       );
@@ -145,7 +145,7 @@ describe('WorkspacesService', () => {
 
   describe('remove', () => {
     it('should soft delete workspace by setting deletedAt', async () => {
-      workspaceAccess.requireMembership.mockResolvedValue({} as any);
+      workspaceAccess.requireWorkspaceMember.mockResolvedValue({} as any);
       (prisma.workspace.findFirst as jest.Mock).mockResolvedValue(
         mockWorkspace,
       );

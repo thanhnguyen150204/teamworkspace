@@ -1,25 +1,29 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { createHash, randomUUID } from 'crypto';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class TokenService {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+  ) {}
 
   hashToken(token: string): string {
     return createHash('sha256').update(token).digest('hex');
   }
 
   signAccessToken(userId: number, email: string): string {
-    const secret = process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET!;
+    const secret = this.configService.get<string>('auth.jwtSecret');
+    const expiresIn = this.configService.get<string>('auth.jwtExpiration');
     return this.jwtService.sign(
       {
         sub: userId,
-        email,
+        email
       },
       {
         secret,
-        expiresIn: '15m',
+        expiresIn: expiresIn as any,
       },
     );
   }
@@ -29,12 +33,13 @@ export class TokenService {
     email: string,
   ): { token: string; jti: string } {
     const jti = randomUUID();
-    const secret = process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET!;
+    const secret =  this.configService.get<string>('auth.refreshTokenSecret');
+    const expiresIn = this.configService.get<string>('auth.refreshTokenExpiration');
     const token = this.jwtService.sign(
       { sub: userId, email, jti },
       {
         secret,
-        expiresIn: '7d',
+        expiresIn: expiresIn as any,
       },
     );
     return { token, jti };
@@ -46,8 +51,7 @@ export class TokenService {
     jti: string;
   } {
     try {
-      const secret =
-        process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET!;
+      const secret =  this.configService.get<string>('auth.refreshTokenSecret');
       return this.jwtService.verify(token, {
         secret,
       });

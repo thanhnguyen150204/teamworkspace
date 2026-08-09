@@ -15,9 +15,20 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { WorkspacesModule } from './workspaces/workspaces.module';
 import { ActivityModule } from './activity/activity.module';
+import { ConfigModule } from '@nestjs/config';
+import appConfig from './config/app.config';
+import databaseConfig from './config/database.config';
+import authConfig from './config/auth.config';
+import cloudinaryConfig from './config/cloudinary.config';
+import { envValidationSchema } from './config/env.validation';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [appConfig,databaseConfig, authConfig, cloudinaryConfig],
+      validationSchema: envValidationSchema,
+    }),
     ThrottlerModule.forRoot([
       {
         ttl: 60000,

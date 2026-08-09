@@ -18,7 +18,7 @@ describe('ActivityService', () => {
     };
 
     const mockWorkspaceAccess = {
-      requireMembership: jest.fn(),
+      requireWorkspaceMember: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

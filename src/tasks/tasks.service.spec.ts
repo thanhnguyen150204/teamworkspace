@@ -46,8 +46,8 @@ describe('TasksService', () => {
     };
 
     const mockWorkspaceAccess = {
-      requireProjectAccess: jest.fn(),
-      requireTaskAccess: jest.fn(),
+      requireProjectMember: jest.fn(),
+      requireTaskMember: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -71,7 +71,7 @@ describe('TasksService', () => {
 
   describe('createTask', () => {
     it('should throw ConflictException if task with same title exists in project', async () => {
-      workspaceAccess.requireProjectAccess.mockResolvedValue({
+      workspaceAccess.requireProjectMember.mockResolvedValue({
         workspaceId: 5,
       } as any);
       (prisma.task.findFirst as jest.Mock).mockResolvedValue(mockTask);
@@ -86,7 +86,7 @@ describe('TasksService', () => {
     });
 
     it('should create task and log activity on happy path', async () => {
-      workspaceAccess.requireProjectAccess.mockResolvedValue({
+      workspaceAccess.requireProjectMember.mockResolvedValue({
         workspaceId: 5,
       } as any);
       (prisma.task.findFirst as jest.Mock).mockResolvedValue(null);
@@ -104,7 +104,7 @@ describe('TasksService', () => {
 
   describe('getKanban', () => {
     it('should categorize tasks into TODO, IN_PROGRESS, REVIEW, DONE', async () => {
-      workspaceAccess.requireProjectAccess.mockResolvedValue({
+      workspaceAccess.requireProjectMember.mockResolvedValue({
         workspaceId: 5,
       } as any);
       const tasks = [
@@ -124,7 +124,7 @@ describe('TasksService', () => {
 
   describe('update', () => {
     it('should log status transition when task status is updated', async () => {
-      workspaceAccess.requireTaskAccess.mockResolvedValue(mockTask as any);
+      workspaceAccess.requireTaskMember.mockResolvedValue(mockTask as any);
       (prisma.task.update as jest.Mock).mockResolvedValue({
         ...mockTask,
         status: TaskStatus.IN_PROGRESS,
@@ -154,7 +154,7 @@ describe('TasksService', () => {
 
   describe('remove', () => {
     it('should soft delete task and log action', async () => {
-      workspaceAccess.requireTaskAccess.mockResolvedValue(mockTask as any);
+      workspaceAccess.requireTaskMember.mockResolvedValue(mockTask as any);
       (prisma.task.update as jest.Mock).mockResolvedValue({
         ...mockTask,
         deletedAt: new Date(),

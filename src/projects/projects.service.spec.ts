@@ -36,8 +36,8 @@ describe('ProjectsService', () => {
     };
 
     const mockWorkspaceAccess = {
-      requireMembership: jest.fn(),
-      requireProjectAccess: jest.fn(),
+      requireWorkspaceMember: jest.fn(),
+      requireProjectMember: jest.fn(),
     };
 
     const mockActivity = {
@@ -65,7 +65,7 @@ describe('ProjectsService', () => {
 
   describe('create', () => {
     it('should throw ConflictException if project name already exists in workspace', async () => {
-      workspaceAccess.requireMembership.mockResolvedValue({} as any);
+      workspaceAccess.requireWorkspaceMember.mockResolvedValue({} as any);
       (prisma.project.findFirst as jest.Mock).mockResolvedValue(mockProject);
 
       await expect(
@@ -78,7 +78,7 @@ describe('ProjectsService', () => {
     });
 
     it('should create project on happy path', async () => {
-      workspaceAccess.requireMembership.mockResolvedValue({} as any);
+      workspaceAccess.requireWorkspaceMember.mockResolvedValue({} as any);
       (prisma.project.findFirst as jest.Mock).mockResolvedValue(null);
       (prisma.project.create as jest.Mock).mockResolvedValue(mockProject);
 
@@ -93,7 +93,7 @@ describe('ProjectsService', () => {
 
   describe('findOne', () => {
     it('should throw ForbiddenException if user has no project access', async () => {
-      workspaceAccess.requireProjectAccess.mockRejectedValue(
+      workspaceAccess.requireProjectMember.mockRejectedValue(
         new ForbiddenException(),
       );
       await expect(
@@ -102,7 +102,7 @@ describe('ProjectsService', () => {
     });
 
     it('should throw NotFoundException if project deleted or non-existent', async () => {
-      workspaceAccess.requireProjectAccess.mockResolvedValue({} as any);
+      workspaceAccess.requireProjectMember.mockResolvedValue({} as any);
       (prisma.project.findFirst as jest.Mock).mockResolvedValue(null);
       await expect(
         service.findOne({ workspaceId: 10, id: 999, currentUserId: 1 }),
@@ -110,7 +110,7 @@ describe('ProjectsService', () => {
     });
 
     it('should return project on happy path', async () => {
-      workspaceAccess.requireProjectAccess.mockResolvedValue({} as any);
+      workspaceAccess.requireProjectMember.mockResolvedValue({} as any);
       (prisma.project.findFirst as jest.Mock).mockResolvedValue(mockProject);
 
       const result = await service.findOne({
@@ -124,7 +124,7 @@ describe('ProjectsService', () => {
 
   describe('remove', () => {
     it('should soft delete project and log action', async () => {
-      workspaceAccess.requireProjectAccess.mockResolvedValue({} as any);
+      workspaceAccess.requireProjectMember.mockResolvedValue({} as any);
       (prisma.project.findFirst as jest.Mock).mockResolvedValue(mockProject);
       (prisma.project.update as jest.Mock).mockResolvedValue({
         ...mockProject,
