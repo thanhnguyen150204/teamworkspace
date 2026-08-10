@@ -1,10 +1,11 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ActivityService } from './activity.service';
 import { ActivityController } from './activity.controller';
-import { WorkspacesModule } from 'src/workspaces/workspaces.module';
+import { WorkspaceAccessModule } from 'src/workspaces/workspace-access.module';
+import { PrismaModule } from 'src/prisma/prisma.module';
 
 @Module({
-  imports: [forwardRef(() => WorkspacesModule)],
+  imports: [WorkspaceAccessModule, PrismaModule],
   controllers: [ActivityController],
   providers: [ActivityService],
   exports: [ActivityService],
