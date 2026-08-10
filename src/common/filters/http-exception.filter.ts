@@ -12,7 +12,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<Request>();
+    const request = ctx.getRequest<Request & { requestId?: string }>();
 
     let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
@@ -27,11 +27,16 @@ export class HttpExceptionFilter implements ExceptionFilter {
     } else {
       console.error('Unhandled Exception:', exception);
     }
+
+    const requestId =
+      request.requestId || (request.headers?.['x-request-id'] as string);
+
     response.status(statusCode).json({
       success: false,
       statusCode,
       message,
       path: request.url,
+      requestId,
       timestamp: new Date().toISOString(),
     });
   }

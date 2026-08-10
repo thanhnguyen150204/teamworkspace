@@ -7,7 +7,7 @@ export class PrismaClientExceptionFilter implements ExceptionFilter {
     catch(exception: Prisma.PrismaClientKnownRequestError, host: ArgumentsHost) {
         const ctx = host.switchToHttp();
         const response = ctx.getResponse<Response>();
-        const request = ctx.getRequest<Request>();
+        const request = ctx.getRequest<Request & { requestId?: string }>();
 
         let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
         let message = 'Database operation failed';
@@ -30,11 +30,16 @@ export class PrismaClientExceptionFilter implements ExceptionFilter {
                 message = 'The change would violate the relation between models';
                 break;
         }
+
+        const requestId =
+            request.requestId || (request.headers?.['x-request-id'] as string);
+
         response.status(statusCode).json({
             success: false,
             statusCode,
             message,
             path: request.url,
+            requestId,
             timestamp: new Date().toISOString(),
         });
     }
