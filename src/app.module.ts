@@ -12,7 +12,7 @@ import { AttachmentsModule } from './attachments/attachments.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { CommonModule } from './common/common.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { WorkspacesModule } from './workspaces/workspaces.module';
 import { ActivityModule } from './activity/activity.module';
 import { ConfigModule } from '@nestjs/config';
@@ -23,6 +23,7 @@ import cloudinaryConfig from './config/cloudinary.config';
 import { envValidationSchema } from './config/env.validation';
 import { PrismaClientExceptionFilter } from './common/filters/prisma-exception.filter';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 
 @Module({
   imports: [
@@ -50,11 +51,12 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     ActivityModule,
   ],
   controllers: [AppController],
-  providers: [AppService,
+  providers: [
+    AppService,
     { provide: APP_GUARD, useClass: ThrottlerGuard },
-    { provide: APP_FILTER, useClass: HttpExceptionFilter},
+    { provide: APP_FILTER, useClass: HttpExceptionFilter },
     { provide: APP_FILTER, useClass: PrismaClientExceptionFilter },
-
+    { provide: APP_INTERCEPTOR, useClass: ResponseInterceptor },
   ],
 })
 export class AppModule implements NestModule {

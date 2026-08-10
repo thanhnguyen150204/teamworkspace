@@ -16,7 +16,7 @@ export class ResponseInterceptor implements NestInterceptor {
       map((data) => ({
         success: true,
         statusCode: context.switchToHttp().getResponse().statusCode,
-        data,
+        data: data ?? {},
         timestamp: new Date().toISOString(),
       })),
     );
