@@ -1,35 +1,71 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { MembershipsService } from './memberships.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { Roles } from 'src/auth/decorators/roles.decorator';
+import { Roles } from 'src/common/decorators/roles.decorator';
 import { WorkspaceRole } from '@prisma/client';
+import { WorkspaceMembershipGuard } from 'src/auth/guards/workspace-membership.guard';
+import { WorkspaceRolesGuard } from 'src/auth/guards/WorkspaceRolesGuard';
+import { InviteMemberDto } from './dto/invite-member.dto';
+import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
+
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 
 @Controller('workspaces/:workspaceId/members')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, WorkspaceMembershipGuard)
 export class MembershipsController {
-  constructor(private readonly membershipsService: MembershipsService) {}
+  constructor(private readonly membershipsService: MembershipsService) { }
+
+  @Post('leave')
+  leaveWorkspace(
+    @Param('workspaceId', ParseIntPipe) workspaceId: number,
+    @CurrentUser('id') userId: number,
+  ) {
+    return this.membershipsService.leaveWorkspace({ workspaceId, userId });
+  }
 
   @Post()
-  @Roles('OWNER', 'ADMIN')
-  invite(@Param('workspaceId') workspaceId: number, @Body('email') email: string , @Body('role') role: WorkspaceRole) {
-    return this.membershipsService.invite(workspaceId,email,role);
+  @UseGuards(WorkspaceRolesGuard)
+  @Roles(WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
+  invite(
+    @Param('workspaceId', ParseIntPipe) workspaceId: number,
+    @Body() dto: InviteMemberDto,
+  ) {
+    return this.membershipsService.invite({ workspaceId, email: dto.email, role: dto.role });
   }
 
   @Get()
-  getMembers(@Param('workspaceId') workspaceId : number) {
+  getMembers(@Param('workspaceId', ParseIntPipe) workspaceId: number) {
     return this.membershipsService.getMembers(workspaceId);
   }
 
   @Patch(':userId')
-  @Roles('OWNER')
-  updateRole(@Param('workspaceId') workspaceId: number, @Param('userId') userId: number,@Body('role') role: WorkspaceRole) {
-    return this.membershipsService.updateRole(workspaceId,userId, role);
+  @UseGuards(WorkspaceRolesGuard)
+  @Roles(WorkspaceRole.OWNER)
+  updateRole(
+    @Param('workspaceId', ParseIntPipe) workspaceId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+    @Body() dto: UpdateMemberRoleDto,
+  ) {
+    return this.membershipsService.updateRole({ workspaceId, userId, newRole: dto.role });
   }
 
   @Delete(':userId')
-  @Roles('OWNER')
-  removeMember(@Param('workspaceId') workspaceId: number, @Param('userId') userId: number) {
-    return this.membershipsService.removeMember(workspaceId, userId);
+  @UseGuards(WorkspaceRolesGuard)
+  @Roles(WorkspaceRole.OWNER)
+  removeMember(
+    @Param('workspaceId', ParseIntPipe) workspaceId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+  ) {
+    return this.membershipsService.removeMember({ workspaceId, userId });
   }
 }

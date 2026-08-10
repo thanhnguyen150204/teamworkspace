@@ -1,40 +1,125 @@
 import { Injectable } from '@nestjs/common';
-import { CreateActivityDto } from './dto/create-activity.dto';
-import { UpdateActivityDto } from './dto/update-activity.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import {    ActivityAction, EntityType } from '@prisma/client';
+import { ActivityAction, EntityType } from '@prisma/client';
+import { WorkspaceAccessService } from 'src/workspace-access/workspace-access.service';
+import { Prisma } from '@prisma/client';
+
+export interface LogActivityParams {
+  workspaceId: number;
+  userId: number;
+  action: ActivityAction;
+  entityType: EntityType;
+  entityId: number;
+  projectId?: number;
+  taskId?: number;
+  description?: string;
+  fieldName?: string;
+  oldValue?: string;
+  newValue?: string;
+}
 
 @Injectable()
 export class ActivityService {
-  constructor (private readonly prisma: PrismaService){}
-  log(data:{
-    userId: number;
-    action: ActivityAction;
-    entityType: EntityType;
-    entityId: number;
-    description?: string;
-    fieldName?: string;
-    oldValue?: string;
-    newValue?: string;
-  }){
-    return this.prisma.activity.create({ data });
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly workspaceAccess: WorkspaceAccessService,
+  ) { }
+
+  log(data: LogActivityParams, prisma: Prisma.TransactionClient = this.prisma) {
+    return prisma.activity.create({ data });
   }
-  getWorkspaceActivity(workspaceId: number){
+
+  logWorkspaceAction(
+    workspaceId: number,
+    userId: number,
+    action: ActivityAction,
+    description: string,
+    prisma: Prisma.TransactionClient = this.prisma
+  ) {
+    return this.log({
+      workspaceId,
+      userId,
+      action,
+      entityType: EntityType.WORKSPACE,
+      entityId: workspaceId,
+      description,
+    },
+      prisma,
+    );
+  }
+
+  logProjectAction(
+    workspaceId: number,
+    userId: number,
+    action: ActivityAction,
+    projectId: number,
+    description: string,
+    prisma: Prisma.TransactionClient = this.prisma
+  ) {
+    return this.log({
+      workspaceId,
+      userId,
+      projectId,
+      action,
+      entityType: EntityType.PROJECT,
+      entityId: projectId,
+      description,
+    },
+      prisma
+    );
+  }
+
+  logTaskAction(
+    workspaceId: number,
+    userId: number,
+    action: ActivityAction,
+    taskId: number,
+    description: string,
+    projectId?: number,
+    fieldName?: string,
+    oldValue?: string,
+    newValue?: string,
+    prisma: Prisma.TransactionClient = this.prisma
+  ) {
+    return this.log({
+      workspaceId,
+      userId,
+      projectId,
+      taskId,
+      action,
+      entityType: EntityType.TASK,
+      entityId: taskId,
+      description,
+      fieldName,
+      oldValue,
+      newValue,
+    },
+      prisma
+    );
+  }
+
+  async getWorkspaceActivity({
+    workspaceId,
+    currentUserId,
+  }: {
+    workspaceId: number;
+    currentUserId: number;
+  }) {
+    await this.workspaceAccess.requireWorkspaceMember(currentUserId, workspaceId);
     return this.prisma.activity.findMany({
       where: {
-        user:{
-          memberships: { some: {workspaceId}}
-              }
-            },
-      include: {user: { select: { id: true, fullName: true}}},
-      orderBy: {createdAt: 'desc'},
-      take: 50,    
+        workspaceId,
+      },
+      include: { user: { select: { id: true, fullName: true, avatar: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
     });
   }
-  getUserActivity(userId: number){
+
+  getUserActivity(userId: number) {
     return this.prisma.activity.findMany({
-      where:{ userId},
-      orderBy: {createdAt: 'desc'},
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
       take: 50,
     });
   }

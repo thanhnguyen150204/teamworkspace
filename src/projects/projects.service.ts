@@ -1,13 +1,35 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { WorkspaceAccessService } from 'src/workspace-access/workspace-access.service';
+import { ActivityAction } from '@prisma/client';
+import { ActivityService } from 'src/activity/activity.service';
 
 @Injectable()
 export class ProjectsService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly workspaceAccess: WorkspaceAccessService,
+    private readonly activity: ActivityService,
+  ) { }
 
-  async create(workspaceId: number, createProjectDto: CreateProjectDto) {
+  async create(
+    {
+      workspaceId,
+      createProjectDto,
+      currentUserId,
+    }: {
+      workspaceId: number,
+      createProjectDto: CreateProjectDto,
+      currentUserId: number,
+    }
+  ) {
+    await this.workspaceAccess.requireWorkspaceMember(currentUserId, workspaceId);
     const projectExist = await this.prisma.project.findFirst({
       where: {
         name: createProjectDto.name,
@@ -15,51 +37,72 @@ export class ProjectsService {
         workspaceId,
       },
     });
-    if(projectExist){
-      throw new ConflictException('Project already exists')
+    if (projectExist) {
+      throw new ConflictException('Project already exists');
     }
     return this.prisma.project.create({
-      data:{
+      data: {
         ...createProjectDto,
         workspaceId,
       },
     });
   }
 
-  findAll(workspaceId: number) {
+  async findAll({
+    workspaceId,
+    currentUserId,
+  }: {
+    workspaceId: number;
+    currentUserId: number;
+  }) {
+    await this.workspaceAccess.requireWorkspaceMember(currentUserId, workspaceId);
     return this.prisma.project.findMany({
-      where:{
+      where: {
         workspaceId,
         deletedAt: null,
-      }
+      },
     });
   }
 
- async findOne(workspaceId: number,id: number) {
-  const project = await this.prisma.project.findFirst({
-    where: { id, workspaceId, deletedAt: null }
-  });
-  if (!project) throw new NotFoundException('Project not found');
-  return project;
+  async findOne({ workspaceId, id, currentUserId }: { workspaceId: number, id: number, currentUserId: number }) {
+    await this.workspaceAccess.requireProjectMember(currentUserId, id);
+    const project = await this.prisma.project.findFirst({
+      where: { id, workspaceId, deletedAt: null },
+    });
+    if (!project) throw new NotFoundException('Project not found');
+    return project;
   }
 
- async update( workspaceId: number ,id: number, updateProjectDto: UpdateProjectDto) {
-   await this.findOne(workspaceId,id);
+  async update(
+    { id, currentUserId, updateProjectDto }: { id: number, currentUserId: number, updateProjectDto: UpdateProjectDto, },
+  ) {
+    await this.workspaceAccess.requireProjectMember(currentUserId, id);
     return this.prisma.project.update({
-      where:{
+      where: {
         id,
       },
-      data:{
+      data: {
         ...updateProjectDto,
-      }
+      },
     });
   }
 
-  async remove(workspaceId: number, id: number) {
-    await this.findOne(workspaceId, id); // validate project thuộc đúng workspace
-    return this.prisma.project.update({
-      where: { id }, // chỉ dùng @id field
-      data: { deletedAt: new Date() },
+  async remove({ workspaceId, id, currentUserId }: { workspaceId: number, id: number, currentUserId: number }) {
+    await this.findOne({ workspaceId, id, currentUserId });
+    return this.prisma.$transaction(async (tx) => {
+      const removed = await tx.project.update({
+        where: { id },
+        data: { deletedAt: new Date() },
+      });
+      await this.activity.logProjectAction(
+        workspaceId,
+        currentUserId,
+        ActivityAction.DELETE,
+        id,
+        `Deleted project "${removed.name}"`,
+        tx,
+      );
+      return removed;
     });
   }
 }

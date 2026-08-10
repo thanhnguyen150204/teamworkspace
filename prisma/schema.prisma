@@ -80,6 +80,7 @@ model Workspace {
 
   memberships Membership[]
   projects    Project[]
+  activities Activity[]
 
   @@map("workspaces")
 }
@@ -195,6 +196,13 @@ model Activity {
 
   entityId Int
 
+  workspaceId Int
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+  projectId Int?
+  taskId Int?
+
+
   fieldName String?
 
   oldValue String?
@@ -209,6 +217,7 @@ model Activity {
 
   user User @relation(fields: [userId], references: [id])
 
+  @@index([workspaceId, createdAt])
   @@index([entityType, entityId])
   @@map("activities")
 }
@@ -216,7 +225,10 @@ model Activity {
   model RefreshToken {
     id        Int      @id @default(autoincrement())
 
-    token     String   @unique
+    jti       String   @unique
+
+    
+    tokenHash     String   @unique
 
     userId    Int
 
@@ -224,11 +236,13 @@ model Activity {
 
     revoked   Boolean  @default(false)   // blacklist flag
 
+    replaceByToken String? 
+
     createdAt DateTime @default(now())
 
     user User @relation(fields: [userId], references: [id])
 
-    @@index([token])
+    @@index([tokenHash])
     @@index([userId])
     @@map("refresh_tokens")
   }

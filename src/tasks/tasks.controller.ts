@@ -1,50 +1,70 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 
 @Controller('projects/:projectId/tasks')
 @UseGuards(JwtAuthGuard)
 export class TasksController {
-  constructor(private readonly tasksService: TasksService) {}
+  constructor(private readonly tasksService: TasksService) { }
 
   @Post()
-  create(@Param('projectId') projectId: number,@Body() createTaskDto: CreateTaskDto, @CurrentUser('id') userId: number) {
-    return this.tasksService.createTask(projectId,createTaskDto,userId);
+  create(
+    @Param('projectId', ParseIntPipe) projectId: number,
+    @Body() createTaskDto: CreateTaskDto,
+    @CurrentUser('id') userId: number,
+  ) {
+    return this.tasksService.createTask({ projectId, createTaskDto, userId });
   }
 
   @Get()
-  findAll(@Param('projectId') projectId: number) {
-    return this.tasksService.findAll(projectId);
+  findAll(
+    @Param('projectId', ParseIntPipe) projectId: number,
+    @CurrentUser('id') userId: number,
+  ) {
+    return this.tasksService.findAll({ projectId, currentUserId: userId });
   }
   @Get('kanban')
-  getKanban(@Param('projectId') projectId: number){
-    return this.tasksService.getKanban(projectId);
+  getKanban(
+    @Param('projectId', ParseIntPipe) projectId: number,
+    @CurrentUser('id') userId: number,
+  ) {
+    return this.tasksService.getKanban({ projectId, currentUserId: userId });
   }
   @Get(':id')
-  findOne(@Param('projectId') projectId: number ,@Param('id') id: number) {
-    return this.tasksService.findOne(projectId,id);
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser('id') userId: number,
+  ) {
+    return this.tasksService.findOne({ taskId: id, currentUserId: userId });
   }
 
   @Patch(':id')
   update(
-    @Param('projectId') projectId: number,
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser('id') userId: number,
     @Body() updateTaskDto: UpdateTaskDto,
   ) {
-    return this.tasksService.update(projectId, id, userId, updateTaskDto);
+    return this.tasksService.update({ id, userId, updateTaskDto });
   }
 
   @Delete(':id')
   remove(
-    @Param('projectId') projectId: number,
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser('id') userId: number,
   ) {
-    return this.tasksService.remove(projectId, id, userId);
+    return this.tasksService.remove({ id, userId });
   }
 }

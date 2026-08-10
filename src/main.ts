@@ -1,11 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { HttpExceptionFilter } from './common/filters/http-exception.fiter';
-import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
+  const port = configService.get<number>('app.port', 3000);
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -14,9 +16,7 @@ async function bootstrap() {
     }),
   );
   app.enableCors();
-  app.useGlobalFilters(new HttpExceptionFilter());
-  app.useGlobalInterceptors(new ResponseInterceptor());
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(port);
 }
 bootstrap();

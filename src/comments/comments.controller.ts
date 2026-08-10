@@ -1,38 +1,67 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 
 @Controller('tasks/:taskId/comments')
 @UseGuards(JwtAuthGuard)
 export class CommentsController {
-  constructor(private readonly commentsService: CommentsService) {}
+  constructor(private readonly commentsService: CommentsService) { }
 
-  @Post() 
-  create(@Param('taskId') taskId: number, @CurrentUser('id') userId: number, @Body() createCommentDto: CreateCommentDto) {
-    return this.commentsService.create(taskId,userId,createCommentDto);
+  @Post()
+  create(
+    @Param('taskId', ParseIntPipe) taskId: number,
+    @CurrentUser('id') userId: number,
+    @Body() createCommentDto: CreateCommentDto,
+  ) {
+    return this.commentsService.create({ taskId, userId, createCommentDto });
   }
 
   @Get()
-  findAll(@Param('taskId') taskId: number) {
-    return this.commentsService.findAll(taskId);
+  findAll(
+    @Param('taskId', ParseIntPipe) taskId: number,
+    @CurrentUser('id') userId: number,
+  ) {
+    return this.commentsService.findAll({ taskId, currentUserId: userId });
   }
 
   @Get(':id')
-  findOne(@Param('id') id: number) {
-    return this.commentsService.findOne(id);
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('taskId', ParseIntPipe) taskId: number,
+    @CurrentUser('id') currentUserId: number,
+  ) {
+    return this.commentsService.findOne({ id, taskId, currentUserId });
   }
 
   @Patch(':id')
-  update(@Param('id') id: number, @CurrentUser('id') userId: number, @Body() updateCommentDto: UpdateCommentDto) {
-    return this.commentsService.update(id, userId, updateCommentDto);
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('taskId', ParseIntPipe) taskId: number,
+    @CurrentUser('id') currentUserId: number,
+    @Body() updateCommentDto: UpdateCommentDto,
+  ) {
+    return this.commentsService.update({ id, taskId, currentUserId, updateCommentDto });
   }
 
   @Delete(':id')
-  remove(@Param('id') id: number, @CurrentUser('id') userId: number) {
-    return this.commentsService.remove(id, userId);
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('taskId', ParseIntPipe) taskId: number,
+    @CurrentUser('id') currentUserId: number,
+  ) {
+    return this.commentsService.remove({ id, taskId, currentUserId });
   }
 }
