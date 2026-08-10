@@ -3,7 +3,7 @@ import { WorkspacesService } from './workspaces.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
 import { ActivityService } from 'src/activity/activity.service';
-import { WorkspaceAccessService } from './workspace-access.service';
+import { WorkspaceAccessService } from '../workspace-access/workspace-access.service';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { WorkspaceRole } from '@prisma/client';
 
@@ -33,6 +33,7 @@ describe('WorkspacesService', () => {
       membership: {
         findUnique: jest.fn(),
       },
+      $transaction: jest.fn((cb) => cb(mockPrisma)),
     };
     const mockUsersService = {};
     const mockActivityService = {

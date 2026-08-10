@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ActivityService } from './activity.service';
 import { ActivityController } from './activity.controller';
-import { WorkspaceAccessModule } from 'src/workspaces/workspace-access.module';
+import { WorkspaceAccessModule } from 'src/workspace-access/workspace-access.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
 
 @Module({
@@ -10,4 +10,4 @@ import { PrismaModule } from 'src/prisma/prisma.module';
   providers: [ActivityService],
   exports: [ActivityService],
 })
-export class ActivityModule {}
+export class ActivityModule { }

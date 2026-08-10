@@ -7,4 +7,4 @@ import { PrismaModule } from 'src/prisma/prisma.module';
   providers: [WorkspaceAccessService],
   exports: [WorkspaceAccessService],
 })
-export class WorkspaceAccessModule {}
+export class WorkspaceAccessModule { }

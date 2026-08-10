@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TasksService } from './tasks.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ActivityService } from 'src/activity/activity.service';
-import { WorkspaceAccessService } from 'src/workspaces/workspace-access.service';
+import { WorkspaceAccessService } from 'src/workspace-access/workspace-access.service';
 import { ConflictException } from '@nestjs/common';
 import { TaskStatus, TaskPriority } from '@prisma/client';
 

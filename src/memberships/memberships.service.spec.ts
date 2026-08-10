@@ -98,6 +98,11 @@ describe('MembershipsService', () => {
 
   describe('updateRole', () => {
     it('should update user role in workspace', async () => {
+      (prisma.membership.findUnique as jest.Mock).mockResolvedValue({
+        userId: 2,
+        workspaceId: 1,
+        role: WorkspaceRole.MEMBER,
+      });
       (prisma.membership.update as jest.Mock).mockResolvedValue({
         id: 10,
         userId: 2,
@@ -111,6 +116,59 @@ describe('MembershipsService', () => {
         newRole: WorkspaceRole.ADMIN,
       });
       expect(result.role).toBe(WorkspaceRole.ADMIN);
+    });
+
+    it('should throw BadRequestException when trying to downgrade the last owner', async () => {
+      (prisma.membership.findUnique as jest.Mock).mockResolvedValue({
+        userId: 2,
+        workspaceId: 1,
+        role: WorkspaceRole.OWNER,
+      });
+      (prisma.membership.count as jest.Mock) = jest.fn().mockResolvedValue(1);
+
+      await expect(
+        service.updateRole({
+          workspaceId: 1,
+          userId: 2,
+          newRole: WorkspaceRole.MEMBER,
+        }),
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('removeMember', () => {
+    it('should throw BadRequestException when trying to remove the last owner', async () => {
+      (prisma.membership.findUnique as jest.Mock).mockResolvedValue({
+        userId: 2,
+        workspaceId: 1,
+        role: WorkspaceRole.OWNER,
+      });
+      (prisma.membership.count as jest.Mock) = jest.fn().mockResolvedValue(1);
+
+      await expect(
+        service.removeMember({
+          workspaceId: 1,
+          userId: 2,
+        }),
+      ).rejects.toThrow();
+    });
+
+    it('should remove member when not the last owner', async () => {
+      (prisma.membership.findUnique as jest.Mock).mockResolvedValue({
+        userId: 2,
+        workspaceId: 1,
+        role: WorkspaceRole.MEMBER,
+      });
+      (prisma.membership.delete as jest.Mock).mockResolvedValue({
+        userId: 2,
+        workspaceId: 1,
+      });
+
+      const result = await service.removeMember({
+        workspaceId: 1,
+        userId: 2,
+      });
+      expect(result).toBeDefined();
     });
   });
 });

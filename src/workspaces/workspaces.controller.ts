@@ -12,9 +12,9 @@ import {
 import { WorkspacesService } from './workspaces.service';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
-import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { Roles } from 'src/auth/decorators/roles.decorator';
+import { Roles } from 'src/common/decorators/roles.decorator';
 import { WorkspaceRolesGuard } from 'src/auth/guards/WorkspaceRolesGuard';
 import { WorkspaceMembershipGuard } from 'src/auth/guards/workspace-membership.guard';
 import { WorkspaceRole } from '@prisma/client';
@@ -22,7 +22,7 @@ import { WorkspaceRole } from '@prisma/client';
 @Controller('workspaces')
 @UseGuards(JwtAuthGuard)
 export class WorkspacesController {
-  constructor(private readonly workspacesService: WorkspacesService) {}
+  constructor(private readonly workspacesService: WorkspacesService) { }
 
   @Post()
   create(
@@ -53,7 +53,7 @@ export class WorkspacesController {
     @CurrentUser('id') userId: number,
     @Body() updateWorkspaceDto: UpdateWorkspaceDto,
   ) {
-    return this.workspacesService.update({id, userId, updateWorkspaceDto});
+    return this.workspacesService.update({ id, userId, updateWorkspaceDto });
   }
 
   @Delete(':id')

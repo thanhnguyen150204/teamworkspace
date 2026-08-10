@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ActivityService } from './activity.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { WorkspaceAccessService } from 'src/workspaces/workspace-access.service';
+import { WorkspaceAccessService } from 'src/workspace-access/workspace-access.service';
 import { ActivityAction, EntityType } from '@prisma/client';
 
 describe('ActivityService', () => {

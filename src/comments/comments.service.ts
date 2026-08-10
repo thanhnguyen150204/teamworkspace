@@ -6,7 +6,7 @@ import {
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { WorkspaceAccessService } from 'src/workspaces/workspace-access.service';
+import { WorkspaceAccessService } from 'src/workspace-access/workspace-access.service';
 
 @Injectable()
 export class CommentsService {
@@ -75,7 +75,7 @@ export class CommentsService {
   async update(
     { id, taskId, currentUserId, updateCommentDto }: { id: number, taskId: number, currentUserId: number, updateCommentDto: UpdateCommentDto },
   ) {
-    const comment = await this.findOne({id, taskId, currentUserId});
+    const comment = await this.findOne({ id, taskId, currentUserId });
     if (comment.userId !== currentUserId) {
       throw new ForbiddenException('You can only edit your own comments!');
     }
@@ -87,8 +87,8 @@ export class CommentsService {
     });
   }
 
-  async remove({id, taskId, currentUserId}: {id: number, taskId: number, currentUserId: number}) {
-    const comment = await this.findOne({id, taskId, currentUserId});
+  async remove({ id, taskId, currentUserId }: { id: number, taskId: number, currentUserId: number }) {
+    const comment = await this.findOne({ id, taskId, currentUserId });
     if (comment.userId !== currentUserId) {
       throw new ForbiddenException('You can only delete your own comments!');
     }
@@ -96,7 +96,7 @@ export class CommentsService {
       where: {
         id,
       },
-      data: { deletedAt: new Date()}
+      data: { deletedAt: new Date() }
     });
   }
 }

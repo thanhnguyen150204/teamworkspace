@@ -4,7 +4,7 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ActivityService } from 'src/activity/activity.service';
 import { ActivityAction } from '@prisma/client';
-import { WorkspaceAccessService } from 'src/workspaces/workspace-access.service';
+import { WorkspaceAccessService } from 'src/workspace-access/workspace-access.service';
 
 @Injectable()
 export class TasksService {
@@ -31,17 +31,24 @@ export class TasksService {
     });
     if (task) throw new ConflictException('Task has been existed');
 
-    const created = await this.prisma.task.create({
-      data: { ...createTaskDto, projectId, creatorId: userId },
+    const created = await this.prisma.$transaction(async (tx) => {
+      const newTask = await tx.task.create({
+        data: { ...createTaskDto, projectId, creatorId: userId },
+      });
+      await this.activity.logTaskAction(
+        project.workspaceId,
+        userId,
+        ActivityAction.CREATE,
+        newTask.id,
+        `Created task "${newTask.title}"`,
+        projectId,
+        undefined,
+        undefined,
+        undefined,
+        tx,
+      );
+      return newTask;
     });
-    await this.activity.logTaskAction(
-      project.workspaceId,
-      userId,
-      ActivityAction.CREATE,
-      created.id,
-      `Created task "${created.title}"`,
-      projectId,
-    );
     return created;
   }
 
@@ -151,18 +158,24 @@ export class TasksService {
   async remove({ id, userId }: { id: number; userId: number }) {
     const task = await this.workspaceAccess.requireTaskMember(userId, id);
     const workspaceId = task.project.workspaceId;
-    const removed = await this.prisma.task.update({
-      where: { id },
-      data: { deletedAt: new Date() },
+    return this.prisma.$transaction(async (tx) => {
+      const removed = await tx.task.update({
+        where: { id },
+        data: { deletedAt: new Date() },
+      });
+      await this.activity.logTaskAction(
+        workspaceId,
+        userId,
+        ActivityAction.DELETE,
+        id,
+        `Deleted task "${task.title}"`,
+        task.projectId,
+        undefined,
+        undefined,
+        undefined,
+        tx,
+      );
+      return removed;
     });
-    await this.activity.logTaskAction(
-      workspaceId,
-      userId,
-      ActivityAction.DELETE,
-      id,
-      `Deleted task "${task.title}"`,
-      task.projectId,
-    );
-    return removed;
   }
 }

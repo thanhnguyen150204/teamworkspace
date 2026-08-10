@@ -6,7 +6,7 @@ import { ActivityModule } from 'src/activity/activity.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { WorkspaceRolesGuard } from 'src/auth/guards/WorkspaceRolesGuard';
 import { WorkspaceMembershipGuard } from 'src/auth/guards/workspace-membership.guard';
-import { WorkspaceAccessModule } from './workspace-access.module';
+import { WorkspaceAccessModule } from '../workspace-access/workspace-access.module';
 
 @Module({
   imports: [
@@ -23,4 +23,4 @@ import { WorkspaceAccessModule } from './workspace-access.module';
   ],
   exports: [WorkspacesService, WorkspaceAccessModule],
 })
-export class WorkspacesModule {}
+export class WorkspacesModule { }

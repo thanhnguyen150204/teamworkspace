@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -9,6 +10,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 @Injectable()
 export class MembershipsService {
   constructor(private readonly prisma: PrismaService) {}
+
   async invite({workspaceId, email, role}: {workspaceId: number, email: string, role: WorkspaceRole}) {
     const user = await this.prisma.user.findFirst({
       where: { email, deletedAt: null },
@@ -37,22 +39,75 @@ export class MembershipsService {
     });
   }
 
-  updateRole({workspaceId, userId, newRole}: {workspaceId: number, userId: number, newRole: WorkspaceRole}) {
+  async updateRole({
+    workspaceId,
+    userId,
+    newRole,
+  }: {
+    workspaceId: number;
+    userId: number;
+    newRole: WorkspaceRole;
+  }) {
+    const membership = await this.prisma.membership.findUnique({
+      where: { userId_workspaceId: { userId, workspaceId } },
+    });
+    if (!membership) throw new NotFoundException('Member not found');
+
+    if (
+      membership.role === WorkspaceRole.OWNER &&
+      newRole !== WorkspaceRole.OWNER
+    ) {
+      const ownerCount = await this.prisma.membership.count({
+        where: { workspaceId, role: WorkspaceRole.OWNER },
+      });
+      if (ownerCount <= 1) {
+        throw new BadRequestException(
+          'Cannot downgrade the last owner of the workspace',
+        );
+      }
+    }
+
     return this.prisma.membership.update({
       where: { userId_workspaceId: { userId, workspaceId } },
       data: { role: newRole },
     });
   }
 
-  removeMember({
+  async removeMember({
     workspaceId,
     userId,
   }: {
     workspaceId: number;
     userId: number;
   }) {
+    const membership = await this.prisma.membership.findUnique({
+      where: { userId_workspaceId: { userId, workspaceId } },
+    });
+    if (!membership) throw new NotFoundException('Member not found');
+
+    if (membership.role === WorkspaceRole.OWNER) {
+      const ownerCount = await this.prisma.membership.count({
+        where: { workspaceId, role: WorkspaceRole.OWNER },
+      });
+      if (ownerCount <= 1) {
+        throw new BadRequestException(
+          'Cannot remove the last owner of the workspace',
+        );
+      }
+    }
+
     return this.prisma.membership.delete({
       where: { userId_workspaceId: { userId, workspaceId } },
     });
+  }
+
+  async leaveWorkspace({
+    workspaceId,
+    userId,
+  }: {
+    workspaceId: number;
+    userId: number;
+  }) {
+    return this.removeMember({ workspaceId, userId });
   }
 }

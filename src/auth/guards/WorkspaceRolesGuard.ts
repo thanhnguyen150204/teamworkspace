@@ -6,11 +6,11 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { WorkspaceRole } from '@prisma/client';
-import { ROLES_KEY } from '../decorators/roles.decorator';
+import { ROLES_KEY } from '../../common/decorators/roles.decorator';
 
 @Injectable()
 export class WorkspaceRolesGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) {}
+  constructor(private readonly reflector: Reflector) { }
   canActivate(context: ExecutionContext): boolean {
     const requiredRoles = this.reflector.getAllAndOverride<WorkspaceRole[]>(
       ROLES_KEY,

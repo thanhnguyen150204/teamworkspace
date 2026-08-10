@@ -13,11 +13,11 @@ import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { Roles } from 'src/auth/decorators/roles.decorator';
+import { Roles } from 'src/common/decorators/roles.decorator';
 import { WorkspaceMembershipGuard } from 'src/auth/guards/workspace-membership.guard';
 import { WorkspaceRole } from '@prisma/client';
 import { WorkspaceRolesGuard } from 'src/auth/guards/WorkspaceRolesGuard';
-import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 
 @Controller('workspaces/:workspaceId/projects')
 @UseGuards(JwtAuthGuard, WorkspaceMembershipGuard)
@@ -32,7 +32,7 @@ export class ProjectsController {
     @Body() createProjectDto: CreateProjectDto,
     @CurrentUser('id') currentUserId: number,
   ) {
-    return this.projectsService.create({workspaceId, createProjectDto, currentUserId});
+    return this.projectsService.create({ workspaceId, createProjectDto, currentUserId });
   }
 
   @Get()
@@ -76,6 +76,6 @@ export class ProjectsController {
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser('id') currentUserId: number,
   ) {
-    return this.projectsService.remove({workspaceId, id, currentUserId});
+    return this.projectsService.remove({ workspaceId, id, currentUserId });
   }
 }

@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { UsersService } from 'src/users/users.service';
-import { TokenService } from './token.service';
-import { RefreshTokenService } from './refresh-token.service';
+import { TokenService } from './services/token.service';
+import { RefreshTokenService } from './services/refresh-token.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';

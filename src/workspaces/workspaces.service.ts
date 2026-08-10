@@ -5,7 +5,7 @@ import { ActivityAction, WorkspaceRole } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
 import { ActivityService } from 'src/activity/activity.service';
-import { WorkspaceAccessService } from './workspace-access.service';
+import { WorkspaceAccessService } from '../workspace-access/workspace-access.service';
 @Injectable()
 export class WorkspacesService {
   constructor(
@@ -13,7 +13,7 @@ export class WorkspacesService {
     private readonly usersService: UsersService,
     private readonly activity: ActivityService,
     private readonly workspaceAccess: WorkspaceAccessService,
-  ) {}
+  ) { }
 
   async create({
     userId,
@@ -22,24 +22,27 @@ export class WorkspacesService {
     userId: number;
     createWorkspaceDto: CreateWorkspaceDto;
   }) {
-    const workspace = await this.prisma.workspace.create({
-      data: {
-        ...createWorkspaceDto,
-        memberships: {
-          create: {
-            userId,
-            role: WorkspaceRole.OWNER,
+    return this.prisma.$transaction(async (tx) => {
+      const workspace = await tx.workspace.create({
+        data: {
+          ...createWorkspaceDto,
+          memberships: {
+            create: {
+              userId,
+              role: WorkspaceRole.OWNER,
+            },
           },
         },
-      },
+      });
+      await this.activity.logWorkspaceAction(
+        workspace.id,
+        userId,
+        ActivityAction.CREATE,
+        `Created workspace "${workspace.name}"`,
+        tx,
+      );
+      return workspace;
     });
-    await this.activity.logWorkspaceAction(
-      workspace.id,
-      userId,
-      ActivityAction.CREATE,
-      `Created workspace "${workspace.name}"`,
-    );
-    return workspace;
   }
 
   findAll(userId: number) {
@@ -113,32 +116,38 @@ export class WorkspacesService {
     updateWorkspaceDto: UpdateWorkspaceDto;
   }) {
     const workspace = await this.findOne({ id, currentUserId: userId });
-    const updated = await this.prisma.workspace.update({
-      where: { id },
-      data: updateWorkspaceDto,
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.workspace.update({
+        where: { id },
+        data: updateWorkspaceDto,
+      });
+      await this.activity.logWorkspaceAction(
+        id,
+        userId,
+        ActivityAction.UPDATE,
+        `Updated workspace "${workspace.name}"`,
+        tx,
+      );
+      return updated;
     });
-    await this.activity.logWorkspaceAction(
-      id,
-      userId,
-      ActivityAction.UPDATE,
-      `Updated workspace "${workspace.name}"`,
-    );
-    return updated;
   }
 
   async remove({ id, userId }: { id: number; userId: number }) {
     const workspace = await this.findOne({ id, currentUserId: userId });
-    const removed = await this.prisma.workspace.update({
-      where: { id },
-      data: { deletedAt: new Date() },
+    return this.prisma.$transaction(async (tx) => {
+      const removed = await tx.workspace.update({
+        where: { id },
+        data: { deletedAt: new Date() },
+      });
+      await this.activity.logWorkspaceAction(
+        id,
+        userId,
+        ActivityAction.DELETE,
+        `Deleted workspace "${workspace.name}"`,
+        tx,
+      );
+      return removed;
     });
-    await this.activity.logWorkspaceAction(
-      id,
-      userId,
-      ActivityAction.DELETE,
-      `Deleted workspace "${workspace.name}"`,
-    );
-    return removed;
   }
 
   async getUserRole({

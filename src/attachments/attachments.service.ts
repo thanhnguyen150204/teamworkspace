@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CloudinaryService } from 'src/common/cloudinary/cloudinary.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { WorkspaceAccessService } from 'src/workspaces/workspace-access.service';
+import { WorkspaceAccessService } from 'src/workspace-access/workspace-access.service';
 
 function decodeOriginalName(originalname: string): string {
   try {
@@ -88,7 +88,7 @@ export class AttachmentsService {
     });
   }
 
-  async remove({id, taskId, currentUserId}:{id: number, taskId: number, currentUserId: number}) {
+  async remove({ id, taskId, currentUserId }: { id: number, taskId: number, currentUserId: number }) {
     await this.workspaceAccess.requireTaskMember(currentUserId, taskId);
     const attachment = await this.prisma.attachment.findUnique({
       where: { id },

@@ -13,12 +13,12 @@ import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 
 @Controller('projects/:projectId/tasks')
 @UseGuards(JwtAuthGuard)
 export class TasksController {
-  constructor(private readonly tasksService: TasksService) {}
+  constructor(private readonly tasksService: TasksService) { }
 
   @Post()
   create(
@@ -26,7 +26,7 @@ export class TasksController {
     @Body() createTaskDto: CreateTaskDto,
     @CurrentUser('id') userId: number,
   ) {
-    return this.tasksService.createTask({projectId, createTaskDto, userId});
+    return this.tasksService.createTask({ projectId, createTaskDto, userId });
   }
 
   @Get()
@@ -57,8 +57,8 @@ export class TasksController {
     @CurrentUser('id') userId: number,
     @Body() updateTaskDto: UpdateTaskDto,
   ) {
-    return this.tasksService.update({id, userId, updateTaskDto});
-  } 
+    return this.tasksService.update({ id, userId, updateTaskDto });
+  }
 
   @Delete(':id')
   remove(

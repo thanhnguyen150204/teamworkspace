@@ -9,8 +9,8 @@ import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RefreshTokenDto } from './dto/refresh_token.dto';
-import { TokenService } from './token.service';
-import { RefreshTokenService } from './refresh-token.service';
+import { TokenService } from './services/token.service';
+import { RefreshTokenService } from './services/refresh-token.service';
 
 @Injectable()
 export class AuthService {
@@ -19,7 +19,7 @@ export class AuthService {
     private readonly tokenService: TokenService,
     private readonly refreshTokenService: RefreshTokenService,
     private readonly prisma: PrismaService,
-  ) {}
+  ) { }
 
   async register(registerDto: RegisterDto) {
     const user = await this.usersService.findRawByEmail(registerDto.email);

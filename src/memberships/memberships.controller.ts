@@ -11,17 +11,27 @@ import {
 } from '@nestjs/common';
 import { MembershipsService } from './memberships.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { Roles } from 'src/auth/decorators/roles.decorator';
+import { Roles } from 'src/common/decorators/roles.decorator';
 import { WorkspaceRole } from '@prisma/client';
 import { WorkspaceMembershipGuard } from 'src/auth/guards/workspace-membership.guard';
 import { WorkspaceRolesGuard } from 'src/auth/guards/WorkspaceRolesGuard';
 import { InviteMemberDto } from './dto/invite-member.dto';
 import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
 
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+
 @Controller('workspaces/:workspaceId/members')
 @UseGuards(JwtAuthGuard, WorkspaceMembershipGuard)
 export class MembershipsController {
-  constructor(private readonly membershipsService: MembershipsService) {}
+  constructor(private readonly membershipsService: MembershipsService) { }
+
+  @Post('leave')
+  leaveWorkspace(
+    @Param('workspaceId', ParseIntPipe) workspaceId: number,
+    @CurrentUser('id') userId: number,
+  ) {
+    return this.membershipsService.leaveWorkspace({ workspaceId, userId });
+  }
 
   @Post()
   @UseGuards(WorkspaceRolesGuard)
@@ -30,7 +40,7 @@ export class MembershipsController {
     @Param('workspaceId', ParseIntPipe) workspaceId: number,
     @Body() dto: InviteMemberDto,
   ) {
-    return this.membershipsService.invite({workspaceId, email: dto.email,role: dto.role});
+    return this.membershipsService.invite({ workspaceId, email: dto.email, role: dto.role });
   }
 
   @Get()
@@ -46,7 +56,7 @@ export class MembershipsController {
     @Param('userId', ParseIntPipe) userId: number,
     @Body() dto: UpdateMemberRoleDto,
   ) {
-    return this.membershipsService.updateRole({workspaceId, userId, newRole: dto.role});
+    return this.membershipsService.updateRole({ workspaceId, userId, newRole: dto.role });
   }
 
   @Delete(':userId')

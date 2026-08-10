@@ -5,8 +5,8 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { TokenService } from './token.service';
-import { RefreshTokenService } from './refresh-token.service';
+import { TokenService } from './services/token.service';
+import { RefreshTokenService } from './services/refresh-token.service';
 
 @Module({
   imports: [
@@ -23,4 +23,4 @@ import { RefreshTokenService } from './refresh-token.service';
   providers: [AuthService, JwtStrategy, TokenService, RefreshTokenService],
   exports: [AuthService, TokenService, RefreshTokenService],
 })
-export class AuthModule {}
+export class AuthModule { }

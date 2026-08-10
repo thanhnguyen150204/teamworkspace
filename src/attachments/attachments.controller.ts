@@ -15,13 +15,13 @@ import { AttachmentsService } from './attachments.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
-import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { AttachmentFileValidator } from './validators/attachment-file.validator';
 
 @Controller('tasks/:taskId/attachments')
 @UseGuards(JwtAuthGuard)
 export class AttachmentsController {
-  constructor(private readonly attachmentsService: AttachmentsService) {}
+  constructor(private readonly attachmentsService: AttachmentsService) { }
 
   @Post()
   @UseInterceptors(
@@ -44,7 +44,7 @@ export class AttachmentsController {
     file: Express.Multer.File,
     @CurrentUser('id') userId: number,
   ) {
-    return this.attachmentsService.upload({taskId, file, userId});
+    return this.attachmentsService.upload({ taskId, file, userId });
   }
 
   @Get()
@@ -61,6 +61,6 @@ export class AttachmentsController {
     @Param('taskId', ParseIntPipe) taskId: number,
     @CurrentUser('id') currentUserId: number,
   ) {
-    return this.attachmentsService.remove({id, taskId, currentUserId});
+    return this.attachmentsService.remove({ id, taskId, currentUserId });
   }
 }

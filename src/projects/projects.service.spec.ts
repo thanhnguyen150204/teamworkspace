@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProjectsService } from './projects.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { WorkspaceAccessService } from 'src/workspaces/workspace-access.service';
+import { WorkspaceAccessService } from 'src/workspace-access/workspace-access.service';
 import { ActivityService } from 'src/activity/activity.service';
 import {
   ConflictException,
@@ -33,6 +33,7 @@ describe('ProjectsService', () => {
         create: jest.fn(),
         update: jest.fn(),
       },
+      $transaction: jest.fn((cb) => cb(mockPrisma)),
     };
 
     const mockWorkspaceAccess = {

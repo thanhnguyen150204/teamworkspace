@@ -7,12 +7,12 @@ import {
 } from '@nestjs/common';
 import { ActivityService } from './activity.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 
 @Controller('activity')
 @UseGuards(JwtAuthGuard)
 export class ActivityController {
-  constructor(private readonly activityService: ActivityService) {}
+  constructor(private readonly activityService: ActivityService) { }
 
   @Get('me')
   getMyActivity(@CurrentUser('id') userId: number) {
