@@ -25,6 +25,7 @@ import { PrismaClientExceptionFilter } from './common/filters/prisma-exception.f
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { GatewayModule } from './gateway/gateway.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
     PrismaModule,
     CommonModule,
     ActivityModule,
+    GatewayModule,
   ],
   controllers: [AppController],
   providers: [

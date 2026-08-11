@@ -5,6 +5,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { ActivityService } from 'src/activity/activity.service';
 import { ActivityAction } from '@prisma/client';
 import { WorkspaceAccessService } from 'src/workspace-access/workspace-access.service';
+import { ProjectGateway } from 'src/gateway/project.gateway';
 
 @Injectable()
 export class TasksService {
@@ -12,7 +13,9 @@ export class TasksService {
     private readonly prisma: PrismaService,
     private readonly activity: ActivityService,
     private readonly workspaceAccess: WorkspaceAccessService,
+    private readonly gateway: ProjectGateway,
   ) { }
+
   async createTask(
     { projectId,
       createTaskDto,
@@ -26,6 +29,7 @@ export class TasksService {
       userId,
       projectId,
     );
+
     const task = await this.prisma.task.findFirst({
       where: { projectId, title: createTaskDto.title, deletedAt: null },
     });
@@ -49,6 +53,8 @@ export class TasksService {
       );
       return newTask;
     });
+
+    this.gateway.broacastToProject(projectId, 'task_created', created);
     return created;
   }
 
@@ -119,8 +125,8 @@ export class TasksService {
   async update({ id, userId, updateTaskDto }: { id: number, userId: number, updateTaskDto: UpdateTaskDto }) {
     const oldTask = await this.workspaceAccess.requireTaskMember(userId, id);
     const workspaceId = oldTask.project.workspaceId;
-    return this.prisma.$transaction(async (tx) => {
-      const updated = await tx.task.update({
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const result = await tx.task.update({
         where: { id },
         data: updateTaskDto,
       });
@@ -151,15 +157,28 @@ export class TasksService {
           tx,
         );
       }
-      return updated;
+      return result;
     });
+
+    if (updateTaskDto.status && updateTaskDto.status !== oldTask.status) {
+      this.gateway.broacastToProject(oldTask.projectId, 'task_moved', {
+        taskId: id,
+        oldStatus: oldTask.status,
+        newStatus: updateTaskDto.status,
+        task: updated,
+      });
+    } else {
+      this.gateway.broacastToProject(oldTask.projectId, 'task_updated', updated);
+    }
+
+    return updated;
   }
 
   async remove({ id, userId }: { id: number; userId: number }) {
     const task = await this.workspaceAccess.requireTaskMember(userId, id);
     const workspaceId = task.project.workspaceId;
-    return this.prisma.$transaction(async (tx) => {
-      const removed = await tx.task.update({
+    const removed = await this.prisma.$transaction(async (tx) => {
+      const result = await tx.task.update({
         where: { id },
         data: { deletedAt: new Date() },
       });
@@ -175,7 +194,10 @@ export class TasksService {
         undefined,
         tx,
       );
-      return removed;
+      return result;
     });
+
+    this.gateway.broacastToProject(task.projectId, 'task_deleted', { taskId: id });
+    return removed;
   }
 }

@@ -7,13 +7,16 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WorkspaceAccessService } from 'src/workspace-access/workspace-access.service';
+import { ProjectGateway } from 'src/gateway/project.gateway';
 
 @Injectable()
 export class CommentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly workspaceAccess: WorkspaceAccessService,
+    private readonly gateway: ProjectGateway,
   ) { }
+
   async create(
     { taskId,
       userId,
@@ -24,13 +27,29 @@ export class CommentsService {
         createCommentDto: CreateCommentDto,
       }) {
     await this.workspaceAccess.requireTaskMember(userId, taskId);
-    return this.prisma.comment.create({
+    const comment = await this.prisma.comment.create({
       data: {
         ...createCommentDto,
         userId,
         taskId,
       },
+      include: {
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            avatar: true,
+          },
+        },
+      },
     });
+
+    const task = await this.prisma.task.findUnique({ where: { id: taskId } });
+    if (task) {
+      this.gateway.broacastToProject(task.projectId, 'comment_added', comment);
+    }
+
+    return comment;
   }
 
   async findAll({
