@@ -5,7 +5,6 @@ import {
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { WorkspaceAccessService } from 'src/workspace-access/workspace-access.service';
 
 @Injectable()
@@ -16,7 +15,9 @@ export class WorkspaceMembershipGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const userId: number = request.user?.id;
 
-    const rawWorkspaceId = request.params.workspaceId;
+    // Check both workspaceId (from sub-routes like /workspaces/:workspaceId/members)
+    // and id (from top-level workspace routes like /workspaces/:id)
+    const rawWorkspaceId = request.params.workspaceId || request.params.id;
     const workspaceId = parseInt(rawWorkspaceId);
 
     if (!workspaceId || isNaN(workspaceId)) {
