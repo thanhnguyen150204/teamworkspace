@@ -3,6 +3,7 @@ import { TasksService } from './tasks.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ActivityService } from 'src/activity/activity.service';
 import { WorkspaceAccessService } from 'src/workspace-access/workspace-access.service';
+import { ProjectGateway } from 'src/gateway/project.gateway';
 import { ConflictException } from '@nestjs/common';
 import { TaskStatus, TaskPriority } from '@prisma/client';
 
@@ -51,12 +52,17 @@ describe('TasksService', () => {
       requireTaskMember: jest.fn(),
     };
 
+    const mockGateway = {
+      broacastToProject: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TasksService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: ActivityService, useValue: mockActivity },
         { provide: WorkspaceAccessService, useValue: mockWorkspaceAccess },
+        { provide: ProjectGateway, useValue: mockGateway },
       ],
     }).compile();
 

@@ -1,21 +1,44 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { WorkspaceRole } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { MailService } from 'src/mail/mail.service';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
+
+/** Cache key helper */
+const membersCacheKey = (workspaceId: number) =>
+  `members:workspace:${workspaceId}`;
 
 @Injectable()
 export class MembershipsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+    @Inject(CACHE_MANAGER) private readonly cache: Cache,
+  ) {}
 
-  async invite({workspaceId, email, role}: {workspaceId: number, email: string, role: WorkspaceRole}) {
+  async invite({
+    workspaceId,
+    email,
+    role,
+    inviterId,
+  }: {
+    workspaceId: number;
+    email: string;
+    role: WorkspaceRole;
+    inviterId: number;
+  }) {
     const user = await this.prisma.user.findFirst({
       where: { email, deletedAt: null },
     });
     if (!user) throw new NotFoundException('User not found');
+
     const existing = await this.prisma.membership.findUnique({
       where: {
         userId_workspaceId: { userId: user.id, workspaceId },
@@ -24,12 +47,48 @@ export class MembershipsService {
     if (existing) {
       throw new ConflictException('User is already a member');
     }
-    return this.prisma.membership.create({
+
+    // Fetch workspace name and inviter info in parallel for the invite email
+    const [workspace, inviter] = await Promise.all([
+      this.prisma.workspace.findUnique({
+        where: { id: workspaceId },
+        select: { name: true },
+      }),
+      this.prisma.user.findUnique({
+        where: { id: inviterId },
+        select: { fullName: true },
+      }),
+    ]);
+
+    const membership = await this.prisma.membership.create({
       data: { userId: user.id, workspaceId, role },
     });
+
+    // Invalidate the members cache for this workspace
+    await this.cache.del(membersCacheKey(workspaceId));
+
+    // Send invite email asynchronously — does not block the response
+    if (workspace && inviter) {
+      void this.mailService.sendWorkspaceInvite({
+        to: email,
+        inviterName: inviter.fullName,
+        workspaceName: workspace.name,
+        workspaceId,
+        role,
+      });
+    }
+
+    return membership;
   }
-  getMembers(workspaceId: number) {
-    return this.prisma.membership.findMany({
+
+  async getMembers(workspaceId: number) {
+    const cacheKey = membersCacheKey(workspaceId);
+
+    // Check cache first
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
+
+    const members = await this.prisma.membership.findMany({
       where: { workspaceId },
       include: {
         user: {
@@ -37,6 +96,10 @@ export class MembershipsService {
         },
       },
     });
+
+    // Cache for 60 seconds
+    await this.cache.set(cacheKey, members, 60000);
+    return members;
   }
 
   async updateRole({
@@ -67,10 +130,14 @@ export class MembershipsService {
       }
     }
 
-    return this.prisma.membership.update({
+    const updated = await this.prisma.membership.update({
       where: { userId_workspaceId: { userId, workspaceId } },
       data: { role: newRole },
     });
+
+    // Invalidate cache
+    await this.cache.del(membersCacheKey(workspaceId));
+    return updated;
   }
 
   async removeMember({
@@ -96,9 +163,13 @@ export class MembershipsService {
       }
     }
 
-    return this.prisma.membership.delete({
+    const removed = await this.prisma.membership.delete({
       where: { userId_workspaceId: { userId, workspaceId } },
     });
+
+    // Invalidate cache
+    await this.cache.del(membersCacheKey(workspaceId));
+    return removed;
   }
 
   async leaveWorkspace({

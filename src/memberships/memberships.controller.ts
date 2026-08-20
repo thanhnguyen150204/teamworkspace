@@ -39,8 +39,14 @@ export class MembershipsController {
   invite(
     @Param('workspaceId', ParseIntPipe) workspaceId: number,
     @Body() dto: InviteMemberDto,
+    @CurrentUser('id') inviterId: number,
   ) {
-    return this.membershipsService.invite({ workspaceId, email: dto.email, role: dto.role });
+    return this.membershipsService.invite({
+      workspaceId,
+      email: dto.email,
+      role: dto.role,
+      inviterId,
+    });
   }
 
   @Get()

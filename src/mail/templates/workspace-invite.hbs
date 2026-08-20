@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lời mời tham gia Workspace</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background-color: #f4f4f7; font-family: 'Segoe UI', Arial, sans-serif; color: #333; }
+    .wrapper { max-width: 600px; margin: 40px auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+    .header { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); padding: 40px 32px; text-align: center; }
+    .header h1 { color: #fff; font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+    .header p { color: rgba(255,255,255,0.85); margin-top: 6px; font-size: 14px; }
+    .body { padding: 36px 40px; }
+    .greeting { font-size: 16px; color: #555; margin-bottom: 20px; line-height: 1.6; }
+    .invite-card { background: #f8f7ff; border: 1.5px solid #e0e0ff; border-radius: 10px; padding: 24px; margin: 24px 0; }
+    .invite-card .label { font-size: 12px; color: #8b8bae; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+    .invite-card .value { font-size: 16px; font-weight: 600; color: #3730a3; }
+    .invite-card .role-badge { display: inline-block; margin-top: 12px; padding: 4px 14px; background: #ede9fe; color: #7c3aed; border-radius: 999px; font-size: 13px; font-weight: 600; }
+    .cta-wrapper { text-align: center; margin: 32px 0; }
+    .cta-btn { display: inline-block; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff !important; text-decoration: none; padding: 14px 36px; border-radius: 8px; font-size: 15px; font-weight: 600; letter-spacing: 0.02em; }
+    .cta-btn:hover { opacity: 0.92; }
+    .divider { border: none; border-top: 1px solid #f0f0f0; margin: 24px 0; }
+    .note { font-size: 13px; color: #888; line-height: 1.6; }
+    .note a { color: #6366f1; word-break: break-all; }
+    .footer { background: #fafafa; padding: 20px 40px; text-align: center; font-size: 12px; color: #aaa; border-top: 1px solid #f0f0f0; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <h1>🚀 TeamWork</h1>
+      <p>Nền tảng quản lý công việc nhóm</p>
+    </div>
+
+    <div class="body">
+      <p class="greeting">
+        Xin chào!<br /><br />
+        <strong>{{inviterName}}</strong> đã mời bạn tham gia workspace của họ trên TeamWork.
+        Hãy nhấn vào nút bên dưới để bắt đầu cộng tác ngay!
+      </p>
+
+      <div class="invite-card">
+        <div class="label">Workspace</div>
+        <div class="value">{{workspaceName}}</div>
+        <div class="label" style="margin-top: 14px;">Người mời</div>
+        <div class="value" style="font-size:15px; color:#4f4f7a;">{{inviterName}}</div>
+        <div>
+          <span class="role-badge">Vai trò: {{role}}</span>
+        </div>
+      </div>
+
+      <div class="cta-wrapper">
+        <a href="{{workspaceUrl}}" class="cta-btn">Tham gia Workspace ngay →</a>
+      </div>
+
+      <hr class="divider" />
+
+      <p class="note">
+        Nếu nút trên không hoạt động, hãy sao chép và dán liên kết sau vào trình duyệt:<br />
+        <a href="{{workspaceUrl}}">{{workspaceUrl}}</a>
+      </p>
+      <p class="note" style="margin-top: 12px;">
+        Nếu bạn không mong đợi lời mời này, hãy bỏ qua email này.
+      </p>
+    </div>
+
+    <div class="footer">
+      © 2026 TeamWork · Hệ thống quản lý công việc nhóm
+    </div>
+  </div>
+</body>
+</html>

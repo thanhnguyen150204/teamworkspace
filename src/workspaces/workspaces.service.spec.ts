@@ -6,6 +6,7 @@ import { ActivityService } from 'src/activity/activity.service';
 import { WorkspaceAccessService } from '../workspace-access/workspace-access.service';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { WorkspaceRole } from '@prisma/client';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 describe('WorkspacesService', () => {
   let service: WorkspacesService;
@@ -42,6 +43,11 @@ describe('WorkspacesService', () => {
     const mockWorkspaceAccessService = {
       requireWorkspaceMember: jest.fn(),
     };
+    const mockCacheManager = {
+      get: jest.fn().mockResolvedValue(null),
+      set: jest.fn().mockResolvedValue(undefined),
+      del: jest.fn().mockResolvedValue(undefined),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -53,6 +59,7 @@ describe('WorkspacesService', () => {
           provide: WorkspaceAccessService,
           useValue: mockWorkspaceAccessService,
         },
+        { provide: CACHE_MANAGER, useValue: mockCacheManager },
       ],
     }).compile();
 

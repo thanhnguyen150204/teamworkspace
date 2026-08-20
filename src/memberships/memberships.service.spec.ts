@@ -3,15 +3,31 @@ import { MembershipsService } from './memberships.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { WorkspaceRole } from '@prisma/client';
+import { MailService } from 'src/mail/mail.service';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 describe('MembershipsService', () => {
   let service: MembershipsService;
   let prisma: jest.Mocked<PrismaService>;
 
+  const mockMailService = {
+    sendWorkspaceInvite: jest.fn().mockResolvedValue(undefined),
+  };
+
+  const mockCacheManager = {
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue(undefined),
+    del: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     const mockPrisma = {
       user: {
         findFirst: jest.fn(),
+        findUnique: jest.fn(),
+      },
+      workspace: {
+        findUnique: jest.fn().mockResolvedValue({ name: 'Test Workspace' }),
       },
       membership: {
         findUnique: jest.fn(),
@@ -19,6 +35,7 @@ describe('MembershipsService', () => {
         create: jest.fn(),
         update: jest.fn(),
         delete: jest.fn(),
+        count: jest.fn(),
       },
     };
 
@@ -26,6 +43,8 @@ describe('MembershipsService', () => {
       providers: [
         MembershipsService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: MailService, useValue: mockMailService },
+        { provide: CACHE_MANAGER, useValue: mockCacheManager },
       ],
     }).compile();
 
@@ -45,6 +64,7 @@ describe('MembershipsService', () => {
           workspaceId: 1,
           email: 'nonexistent@example.com',
           role: WorkspaceRole.MEMBER,
+          inviterId: 1,
         }),
       ).rejects.toThrow(NotFoundException);
     });
@@ -65,6 +85,7 @@ describe('MembershipsService', () => {
           workspaceId: 1,
           email: 'member@example.com',
           role: WorkspaceRole.MEMBER,
+          inviterId: 1,
         }),
       ).rejects.toThrow(ConflictException);
     });
@@ -73,6 +94,10 @@ describe('MembershipsService', () => {
       (prisma.user.findFirst as jest.Mock).mockResolvedValue({
         id: 2,
         email: 'newmember@example.com',
+      });
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+        id: 1,
+        fullName: 'Admin User',
       });
       (prisma.membership.findUnique as jest.Mock).mockResolvedValue(null);
       (prisma.membership.create as jest.Mock).mockResolvedValue({
@@ -86,6 +111,7 @@ describe('MembershipsService', () => {
         workspaceId: 1,
         email: 'newmember@example.com',
         role: WorkspaceRole.MEMBER,
+        inviterId: 1,
       });
       expect(result).toEqual({
         id: 11,

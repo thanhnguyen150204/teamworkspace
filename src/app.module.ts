@@ -28,9 +28,15 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { GatewayModule } from './gateway/gateway.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SchedulerModule } from './scheduler/scheduler.module';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 60 *1000, // time-to-live: 60 seconds 
+      max: 100, // max items in memory cache
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       load: [appConfig, databaseConfig, authConfig, cloudinaryConfig],

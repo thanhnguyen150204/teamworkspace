@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import { ActivityAction, WorkspaceRole } from '@prisma/client';
@@ -6,6 +6,12 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
 import { ActivityService } from 'src/activity/activity.service';
 import { WorkspaceAccessService } from '../workspace-access/workspace-access.service';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
+
+/** Cache key helper */
+const workspacesCacheKey = (userId: number) => `workspaces:user:${userId}`;
+
 @Injectable()
 export class WorkspacesService {
   constructor(
@@ -13,7 +19,8 @@ export class WorkspacesService {
     private readonly usersService: UsersService,
     private readonly activity: ActivityService,
     private readonly workspaceAccess: WorkspaceAccessService,
-  ) { }
+    @Inject(CACHE_MANAGER) private readonly cache: Cache,
+  ) {}
 
   async create({
     userId,
@@ -41,12 +48,20 @@ export class WorkspacesService {
         `Created workspace "${workspace.name}"`,
         tx,
       );
+      // Invalidate the workspace list cache for this user
+      await this.cache.del(workspacesCacheKey(userId));
       return workspace;
     });
   }
 
-  findAll(userId: number) {
-    return this.prisma.workspace.findMany({
+  async findAll(userId: number) {
+    const cacheKey = workspacesCacheKey(userId);
+
+    // Check cache first
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
+
+    const workspaces = await this.prisma.workspace.findMany({
       where: {
         deletedAt: null,
         memberships: {
@@ -74,6 +89,10 @@ export class WorkspacesService {
         },
       },
     });
+
+    // Cache for 60 seconds
+    await this.cache.set(cacheKey, workspaces, 60000);
+    return workspaces;
   }
 
   async findOne({
@@ -139,6 +158,8 @@ export class WorkspacesService {
         where: { id },
         data: { deletedAt: new Date() },
       });
+      // Invalidate the workspace list cache for this user
+      await this.cache.del(workspacesCacheKey(userId));
       await this.activity.logWorkspaceAction(
         id,
         userId,
